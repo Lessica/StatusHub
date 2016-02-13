@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <title>帮你玩服务状态</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="/static/assets/application.css" type="text/css" />
+        <link rel="icon" href="/static/images/status-icon-green.png" type="image/png" />
+        <script src="/static/assets/application.js"></script>
+    </head>
+    <body class="graph-page">
+        <div id="header" class="wrap">
+            <h1 class="logo">
+                <a href="/">
+                    <img src="/static/images/logo-good.png" alt="play4u:status" />
+                </a>
+            </h1>
+
+            <h2 id="last_updated">
+                更新于 <abbr class="timeago" title="{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}">{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}</abbr>
+            </h2>
+        </div>
+
+        <div id="message-list" class="wrap" data-last-known-status="{{ latest_message_status }}">
+            <div class="loader"><img src="/static/images/spinner.gif" /></div>
+            <div class="messages-header">
+                <a href="/" class="back">&laquo; 仪表盘</a>
+                <h1>状态信息</h1>
+            </div>
+            {% for messages_date, messages in messages_group_list.items %}
+            <div class="message_group" id="{{ messages_date }}">
+                <h3>{{ messages.display }}</h3>
+                {% for message in messages.list %}
+                <div class="message {{ message.type }} {{ message.status }}" data-status="{{ message.status }}">
+                    <time class="time" datetime="{{ message.created_at | date:"Y-m-d\TH:i:s" }}">{{ message.created_at | date:"H:i" }} CST</time> <span class="title">{{ message.content }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <div class="pagination">
+                {% if page_next_arg %}
+                    <a class="next" href="/messages/{{ page_next_arg }}">下周 &raquo;</a>
+                {% else %}
+                    <span class="next disabled">下周 &raquo;</span>
+                {% endif %}
+                {% if page_prev_arg %}
+                    <a class="prev" href="/messages/{{ page_prev_arg }}">&laquo; 上周</a>
+                {% else %}
+                    <span class="prev disabled">&laquo; 上周</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="footer" class="wrap">
+            <div id="legal">
+                <ul>
+                    <li><a href="http://www.play4u.cn/">官方网站</a></li>
+                    <li><a href="http://kf.touchsprite.com/hc/">技术支持</a></li>
+                    <li><a href="https://www.touchsprite.net/">开发者</a></li>
+                </ul>
+                <p>© 2016 帮你玩 版权所有</p>
+            </div>
+            <div class="github">
+                <a href="http://www.play4u.cn/"><img src="/static/images/invertocat.png" alt="Play4U" /></a>
+            </div>
+        </div>
+    </body>
+</html>
+<!-- always remember that i_82 loves you dearly -->

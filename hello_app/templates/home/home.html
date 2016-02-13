@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <title>帮你玩服务状态</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="/static/assets/application.css" type="text/css" />
+        <link rel="icon" href="/static/images/status-icon-green.png" type="image/png" />
+        <script src="/static/assets/application.js"></script>
+    </head>
+    <body class="graph-page">
+        <div id="header" class="wrap">
+            <h1 class="logo">
+                <a href="/">
+                    <img src="/static/images/logo-good.png" alt="play4u:status" />
+                </a>
+            </h1>
+
+            <h2 id="last_updated">
+                更新于 <abbr class="timeago" title="{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}">{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}</abbr>
+            </h2>
+        </div>
+
+        <div id="latest-message" class="wrap">
+            <div id="message" class="{{ latest_message_status }}">
+                {{ latest_message_content }}
+            </div>
+            <div id="status-history">
+                <a href="/messages/" class="more">更多历史记录 &raquo;</a>
+            </div>
+        </div>
+
+        <div id="service-status" class="wrap">
+            <div class="about">
+                <h3>关于本站</h3>
+                <p>我们持续监测<a href="https://www.touchsprite.net/">帮你玩开发者平台</a>及其关联的各项服务. 如果服务有任何异常, 将会有通知在这里发布.</p>
+            </div>
+        </div>
+
+        <div id="graph-list" class="wrap">
+            <div class="about">
+                <h3>这些图表意味着什么</h3>
+                <p>这些图表中的数据采样于帮你玩各项线上服务的性能与可用性数据, 它们将会定期被更新.</p>
+                <p>我们提供了<a href="/api/">帮你玩服务可用性接口</a>以方便开发者确认这些信息.</p>
+            </div>
+            <div id="graph_data">
+                [% graph_data %]
+            </div>
+        </div>
+
+        <div id="footer" class="wrap">
+            <div id="legal">
+                <ul>
+                    <li><a href="http://www.play4u.cn/">官方网站</a></li>
+                    <li><a href="http://kf.touchsprite.com/hc/">技术支持</a></li>
+                    <li><a href="https://www.touchsprite.net/">开发者</a></li>
+                </ul>
+                <p>© 2016 帮你玩 版权所有</p>
+            </div>
+            <div class="github">
+                <a href="http://www.play4u.cn/"><img src="/static/images/invertocat.png" alt="Play4U" /></a>
+            </div>
+        </div>
+    </body>
+</html>
+<!-- always remember that i_82 loves you dearly -->

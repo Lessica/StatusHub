@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <title>帮你玩服务状态</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="/static/assets/application.css" type="text/css" />
+        <link rel="icon" href="/static/images/status-icon-green.png" type="image/png" />
+        <script src="/static/assets/application.js"></script>
+    </head>
+    <body class="graph-page">
+        <div id="header" class="wrap">
+            <h1 class="logo">
+                <a href="/">
+                    <img src="/static/images/logo-good.png" alt="play4u:status" />
+                </a>
+            </h1>
+
+            <h2 id="last_updated">
+                更新于 <abbr class="timeago" title="{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}">{{ last_updated_time | date:"Y-m-d\TH:i:s\Z" }}</abbr>
+            </h2>
+        </div>
+
+        <div id="main">
+            <div id="api" class="wrap">
+                <h1 class="title">API</h1>
+                <p>
+                    如果你想要检查帮你玩服务的状态,
+                    我们提供了标准的 JSON API.
+                </p>
+                <p>所有的 API 方法均支持 <a href="http://en.wikipedia.org/wiki/JSONP">JSONP</a>, 方便开发者提取出有效信息:</p>
+                <pre class='terminal'>
+&lt;script&gt;
+function apiStatus(data) {
+    console.log(data.status);
+}
+&lt;/script&gt;
+&lt;script src="https://status.touchsprite.net/api/status.json?callback=apiStatus"&gt;&lt;/script&gt;
+                </pre>
+                <dl>
+                    <h3>列出可用的方法</h3>
+                    <dt id='api-root'>
+                        <a href='/api.json'>GET /api.json</a>
+                    </dt>
+                    <dd>返回 API 中所有的方法. 请在客户端中使用根 API 返回的功能性接口地址, 不要将功能性的接口地址写死,  以防止具体的接口地址发生变化.</dd>
+                    <dd>
+<pre class='terminal'>
+{
+    "status_url": "https://status.play4u.cn/api/status.json",
+    "messages_url": "https://status.play4u.cn/api/messages.json",
+    "last_message_url": "https://status.play4u.cn/api/last-message.json",
+    "hosts_url": "https://status.play4u.cn/api/hosts.json",
+    "origins_url": "https://status.play4u.cn/api/origins.json"
+}
+</pre>
+                    </dd>
+
+                    <h3>列出监测目标</h3>
+                    <dt id='api-hosts'>
+                        <a href="/api/hosts.json">GET /api/hosts.json</a>
+                    </dt>
+                    <dd>
+                        返回当前所有被监测目标及类型.<br />
+                        type 可以为 Ping 超时与延迟测试 (ping), HTTP 响应码及延迟测试 (http), HTTP 响应内容测试 (resp).<br />
+                        port 为响应端口, secure 为是否使用安全套接字.
+                    </dd>
+                    <dd>
+<pre class='terminal'>
+[
+    {
+        "type": "ping",
+        "host": "101.201.179.99"
+    },
+    {
+        "type": "http",
+        "host": "www.play4u.cn",
+        "port": 80,
+        "secure": false
+    },
+    {
+        "type": "resp",
+        "url": "https://storeauth.touchsprite.net/ajax/home"
+    }
+]
+</pre>
+                    </dd>
+
+                    <h3>列出监测点</h3>
+                    <dt id="api-origins">
+                        <a href="/api/origins.json">GET /api/origins.json</a>
+                    </dt>
+                    <dd>
+                        返回当前所有监测点及类型.<br />
+                        type 可以为 Ping 超时与延迟测试 (ping), HTTP 响应码及延迟测试 (http), HTTP 响应内容测试 (resp).<br />
+                        power 为权重.
+                    </dd>
+                    <dd>
+<pre class='terminal'>
+[
+    {
+        "type": "ping",
+        "host": "61.129.68.199",
+        "power": 10
+    },
+    {
+        "type": "http",
+        "host": "61.129.68.199",
+        "power": 8
+    },
+    {
+        "type": "resp",
+        "host": "114.215.186.63",
+        "power": 3
+    }
+]
+</pre>
+                    </dd>
+
+                    <h3>列出当前系统状态</h3>
+                    <dt id='api-current-status'>
+                        <a href='/api/status.json'>GET /api/status.json</a>
+                    </dt>
+                    <dd>返回当前系统状态 - <code>good</code> (良好), <code>minor</code> (中等), 或 <code>major</code> (故障) - 和时间戳.</dd>
+                    <dd>
+<pre class='terminal'>
+{
+    "status": "good",
+    "last_updated": "2012-12-07T18:11:55Z"
+}
+</pre>
+                    </dd>
+
+                    <h3>列出历史系统状态</h3>
+                    <dt id='api-last-message'>
+                        <a href='/api/last-message.json'>GET /api/last-message.json</a>
+                    </dt>
+                    <dd>返回最近一次发布的系统状态公告, 状态和时间戳.</dd>
+                    <dd>
+<pre class='terminal'>
+{
+    "status": "good",
+    "body": "Battle station fully operational",
+    "created_on": "2012-12-07T18:11:55Z"
+}
+</pre>
+                    </dd>
+                    <dt id='api-recent-messages'>
+                        <a href='/api/messages.json'>GET /api/messages.json</a>
+                    </dt>
+                    <dd>返回最近几次发布的系统状态公告, 状态和时间戳.</dd>
+                    <dd>
+<pre class='terminal'>
+[
+    {
+        "status": "good",
+        "body": "Battle station fully operational",
+        "created_on": "2012-12-07T18:11:55Z"
+    },
+    {
+        "status": "minor",
+        "body": "Almost done reticulating splines",
+        "created_on": "2012-12-05T12:08:33Z"
+    }
+]
+</pre>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div id="footer" class="wrap">
+            <div id="legal">
+                <ul>
+                    <li><a href="http://www.play4u.cn/">官方网站</a></li>
+                    <li><a href="http://kf.touchsprite.com/hc/">技术支持</a></li>
+                    <li><a href="https://www.touchsprite.net/">开发者</a></li>
+                </ul>
+                <p>© 2016 帮你玩 版权所有</p>
+            </div>
+            <div class="github">
+                <a href="http://www.play4u.cn/"><img src="/static/images/invertocat.png" alt="Play4U" /></a>
+            </div>
+        </div>
+    </body>
+</html>
+<!-- always remember that i_82 loves you dearly -->

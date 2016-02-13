@@ -1,0 +1,9 @@
+<div class="tabs">
+    <div class="tab [% tab_past_day_selected %]"><a href="/graphs/past_day">昨天</a></div>
+    <div class="tab [% tab_past_week_selected %]"><a href="/graphs/past_week">过去一周</a></div>
+    <div class="tab [% tab_past_month_selected %]"><a href="/graphs/past_month">过去一月</a></div>
+</div>
+<div id="graphs">
+    <div class="loader"><img src="/static/images/spinner.gif" /></div>
+    [% graph_element %]
+</div>
