@@ -114,7 +114,7 @@ class SiteMessageModel(CommonMessageModel):
             'body': "`content`"
         }).values('status', 'body', 'created_at').order_by('-id')
         if not recent_messages_list:
-            return None
+            return []
         new_recent_messages = []
         for recent_message in recent_messages_list:
             new_recent_message = {
@@ -209,9 +209,21 @@ class CommonHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    checked_count = models.IntegerField(default=0)
 
     def __unicode__(self):
         return self.name
+
+    @staticmethod
+    def get_all_hosts_arr():
+        ping_arr = PingHostModel.get_brief_hosts_arr()
+        http_arr = HttpHostModel.get_brief_hosts_arr()
+        resp_arr = RespHostModel.get_brief_hosts_arr()
+        arr = []
+        arr.extend(ping_arr)
+        arr.extend(http_arr)
+        arr.extend(resp_arr)
+        return arr
 
 
 class CommonOriginModel(models.Model):
@@ -224,20 +236,51 @@ class CommonOriginModel(models.Model):
         max_length=255,
         unique=True
     )
+    power = models.IntegerField()
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    sent_count = models.IntegerField(default=0)
 
     def __unicode__(self):
         return self.name
 
+    @staticmethod
+    def get_all_origins_arr():
+        ping_arr = PingOriginModel.get_brief_origins_arr()
+        http_arr = HttpOriginModel.get_brief_origins_arr()
+        resp_arr = RespOriginModel.get_brief_origins_arr()
+        arr = []
+        arr.extend(ping_arr)
+        arr.extend(http_arr)
+        arr.extend(resp_arr)
+        return arr
+
 
 class PingHostModel(CommonHostModel):
-    pass
+    @staticmethod
+    def get_brief_hosts_arr():
+        ping_hosts = PingHostModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for ping_host in ping_hosts:
+            arr.append({
+                'type': 'ping',
+                'host': ping_host.host
+            })
+        return arr
 
 
 class PingOriginModel(CommonOriginModel):
-    pass
+    @staticmethod
+    def get_brief_origins_arr():
+        ping_origins = PingOriginModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for ping_origin in ping_origins:
+            arr.append({
+                'type': 'ping',
+                'host': ping_origin.origin
+            })
+        return arr
 
 
 class PingDataModel(models.Model):
@@ -263,12 +306,68 @@ class HttpHostModel(CommonHostModel):
     secure = models.BooleanField(default=False)
     port = models.IntegerField()
 
+    @staticmethod
+    def get_brief_hosts_arr():
+        http_hosts = HttpHostModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for http_host in http_hosts:
+            arr.append({
+                'type': 'http',
+                'host': http_host.host,
+                'port': http_host.port,
+                'secure': http_host.secure
+            })
+        return arr
+
+
+class RespHostModel(HttpHostModel):
+    url = models.CharField(max_length=255)
+    contents = models.TextField()
+    expected_contents = models.TextField()
+
+    @staticmethod
+    def get_brief_hosts_arr():
+        resp_hosts = RespHostModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for resp_host in resp_hosts:
+            arr.append({
+                'type': 'resp',
+                'url': resp_host.url
+            })
+        return arr
+
 
 class HttpOriginModel(CommonOriginModel):
     ua = models.CharField(
         default=SiteConfigModel.get_config('default_origin_user_agent'),
         max_length=512
     )
+
+    @staticmethod
+    def get_brief_origins_arr():
+        http_origins = HttpOriginModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for http_origin in http_origins:
+            arr.append({
+                'type': 'http',
+                'host': http_origin.origin
+            })
+        return arr
+
+
+class RespOriginModel(HttpOriginModel):
+    bandwidth = models.FloatField()
+
+    @staticmethod
+    def get_brief_origins_arr():
+        resp_origins = RespOriginModel.objects.filter(enabled=True).order_by('-id')
+        arr = []
+        for resp_origin in resp_origins:
+            arr.append({
+                'type': 'resp',
+                'host': resp_origin.origin
+            })
+        return arr
 
 
 class HttpDataModel(models.Model):
@@ -345,3 +444,29 @@ class SiteStatusModel(models.Model):
     @staticmethod
     def handle_global_status():
         pass
+
+
+class ActiveHttpHostModel(HttpHostModel):
+    framework = models.CharField(max_length=255)
+    report_type = models.IntegerField(default=0, choices=(
+        (0, 'exception'),
+    ))
+    package_count = models.IntegerField(default=0)
+
+
+class ActiveExceptionModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.ForeignKey(ActiveHttpHostModel)
+    class_name = models.CharField(max_length=255)
+    method_name = models.CharField(max_length=255)
+    route = models.TextField()
+    log_data = models.BinaryField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+
+class ActivePackageModel(models.Model):
+    pass
+
+
+class ActiveExceptionPackageModel(ActivePackageModel):
+    pass

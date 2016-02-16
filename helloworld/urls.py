@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^api/messages.json$', hello_views.api_messages),
     url(r'^api/hosts.json$', hello_views.api_hosts),
     url(r'^api/origins.json$', hello_views.api_origins),
+    url(r'^api/types.json$', hello_views.api_types),
     url(r'^hello/$', hello_views.hello),
     url(r'^admin/', admin.site.urls),
     url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),

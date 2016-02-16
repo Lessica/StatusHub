@@ -85,6 +85,47 @@ function apiStatus(data) {
 </pre>
                     </dd>
 
+                    <h3>列出监测项目</h3>
+                    <dt id="api-types">
+                        <a href="/api/types.json">GET /api/types.json</a>
+                    </dt>
+                    <dd>
+                        返回当前所有监测项目类型与名称.
+                    </dd>
+                    <dd>
+<pre class="terminal">
+[
+    {
+        "type": "ping",
+        "subtypes": [
+            "ping-success-rate",
+            "ping-delay-avg"
+        ]
+    },
+    {
+        "type": "http",
+        "subtypes": [
+            "http-success-rate",
+            "http-delay-avg"
+        ]
+    },
+    {
+        "type": "resp",
+        "subtypes": [
+            "resp-match-rate",
+            "resp-delay-avg"
+        ]
+    },
+    {
+        "type": "active",
+        "subtypes": [
+            "exception-rate"
+        ]
+    }
+]
+</pre>
+                    </dd>
+
                     <h3>列出监测点</h3>
                     <dt id="api-origins">
                         <a href="/api/origins.json">GET /api/origins.json</a>

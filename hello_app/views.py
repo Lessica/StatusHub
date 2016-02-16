@@ -4,13 +4,16 @@ import time
 import json
 from django.shortcuts import render
 from django.http import HttpResponse
-from hello_app.models import SiteMessageModel, SiteConfigModel
+from hello_app.models import SiteMessageModel, SiteConfigModel, CommonHostModel, CommonOriginModel
 
 
 # Create your views here.
 
 def hello(request):
-    return HttpResponse(u"Hello World!")
+    return HttpResponse(json.dumps({
+        'status': True,
+        'message': 'Hello world!'
+    }), content_type='application/json')
 
 
 def index(request, pattern):
@@ -77,7 +80,7 @@ def api_json(request):
         'hosts_url': str(SiteConfigModel.get_config('api_hosts_url')),
         'origins_url': str(SiteConfigModel.get_config('api_origins_url'))
     }
-    return HttpResponse(json.dumps(obj))
+    return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_status(request):
@@ -91,17 +94,52 @@ def api_last_message(request):
         'body': latest_message.content,
         'created_on': latest_message.get_cst_time(),
     }
-    return HttpResponse(json.dumps(obj))
+    return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_messages(request):
     obj = SiteMessageModel.get_recent_messages_list()
-    return HttpResponse(json.dumps(obj))
+    return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_hosts(request):
-    return HttpResponse(u"Not ready")
+    obj = CommonHostModel.get_all_hosts_arr()
+    return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_origins(request):
-    return HttpResponse(u"Not ready")
+    obj = CommonOriginModel.get_all_origins_arr()
+    return HttpResponse(json.dumps(obj), content_type="application/json")
+
+
+def api_types(request):
+    obj = [
+        {
+            "type": "ping",
+            "subtypes": [
+                "ping-success-rate",
+                "ping-delay-avg"
+            ]
+        },
+        {
+            "type": "http",
+            "subtypes": [
+                "http-success-rate",
+                "http-delay-avg"
+            ]
+        },
+        {
+            "type": "resp",
+            "subtypes": [
+                "resp-match-rate",
+                "resp-delay-avg"
+            ]
+        },
+        {
+            "type": "active",
+            "subtypes": [
+                "exception-rate"
+            ]
+        }
+    ]
+    return HttpResponse(json.dumps(obj), content_type="application/json")
