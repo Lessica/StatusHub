@@ -8,10 +8,26 @@ from django.db import models
 # Create your models here.
 
 
+class SiteConfigCategoryModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return self.name
+
+
 class SiteConfigModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
     key = models.CharField(max_length=64, unique=True)
     value = models.CharField(max_length=256)
-    comments = models.TextField()
+    category = models.ForeignKey(SiteConfigCategoryModel)
+    comments = models.TextField(blank=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return self.key
 
     @staticmethod
     def set_config(config_name, config_value):
@@ -47,12 +63,10 @@ class SiteConfigModel(models.Model):
         SiteConfigModel.add_config('api_last_message_url', 'https://status.play4u.cn/api/last-message.json')
         SiteConfigModel.add_config('api_hosts_url', 'https://status.play4u.cn/api/hosts.json')
         SiteConfigModel.add_config('api_origins_url', 'https://status.play4u.cn/api/origins.json')
+        SiteConfigModel.add_config('api_types_url', 'https://status.play4u.cn/api/types.json')
         SiteConfigModel.add_config('global_good_percentage_threshold', '99.00')
         SiteConfigModel.add_config('global_minor_percentage_threshold', '90.00')
         SiteConfigModel.add_config('global_major_percentage_threshold', '80.00')
-
-    def __unicode__(self):
-        return self.key + ' = "' + self.value + '"'
 
 
 class CommonMessageModel(models.Model):
@@ -70,14 +84,11 @@ class CommonMessageModel(models.Model):
         (3, 'Notice'),
         (4, 'Error'),
     ))
-    content = models.TextField(default=str(SiteConfigModel.get_config('default_site_message_content')))
+    content = models.TextField(default='')
     power = models.IntegerField(default=0)
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-
-    def __unicode__(self):
-        return "[" + self.get_type_display() + ", " + self.get_status_display() + "] " + self.content
 
 
 class SiteMessageModel(CommonMessageModel):
@@ -166,7 +177,7 @@ class SiteMessageModel(CommonMessageModel):
                 if weekly_message['date'] not in new_messages_list:
                     tmp = datetime.datetime.strptime(weekly_message['date'], "%Y-%m-%d")
                     new_messages_list[weekly_message['date']] = {
-                        'display': datetime.datetime.strftime(tmp, "%B %d, %Y"),
+                        'display': datetime.datetime.strftime(datetime.date(tmp.year, tmp.month, tmp.day), "%B %d, %Y"),
                         'list': []
                     }
                 new_messages_list[weekly_message['date']]['list'].append(weekly_message)
@@ -210,9 +221,7 @@ class CommonHostModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     checked_count = models.IntegerField(default=0)
-
-    def __unicode__(self):
-        return self.name
+    random_id = models.CharField(max_length=6, default='')
 
     @staticmethod
     def get_all_hosts_arr():
@@ -241,9 +250,7 @@ class CommonOriginModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     sent_count = models.IntegerField(default=0)
-
-    def __unicode__(self):
-        return self.name
+    frequency = models.IntegerField(default=900)
 
     @staticmethod
     def get_all_origins_arr():
@@ -278,7 +285,9 @@ class PingOriginModel(CommonOriginModel):
         for ping_origin in ping_origins:
             arr.append({
                 'type': 'ping',
-                'host': ping_origin.origin
+                'host': ping_origin.origin,
+                'power': ping_origin.power,
+                'frequency': ping_origin.frequency,
             })
         return arr
 
@@ -322,7 +331,6 @@ class HttpHostModel(CommonHostModel):
 
 class RespHostModel(HttpHostModel):
     url = models.CharField(max_length=255)
-    contents = models.TextField()
     expected_contents = models.TextField()
 
     @staticmethod
@@ -339,7 +347,7 @@ class RespHostModel(HttpHostModel):
 
 class HttpOriginModel(CommonOriginModel):
     ua = models.CharField(
-        default=SiteConfigModel.get_config('default_origin_user_agent'),
+        default='',
         max_length=512
     )
 
@@ -350,7 +358,9 @@ class HttpOriginModel(CommonOriginModel):
         for http_origin in http_origins:
             arr.append({
                 'type': 'http',
-                'host': http_origin.origin
+                'host': http_origin.origin,
+                'power': http_origin.power,
+                'frequency': http_origin.frequency,
             })
         return arr
 
@@ -365,7 +375,9 @@ class RespOriginModel(HttpOriginModel):
         for resp_origin in resp_origins:
             arr.append({
                 'type': 'resp',
-                'host': resp_origin.origin
+                'host': resp_origin.origin,
+                'power': resp_origin.power,
+                'frequency': resp_origin.frequency,
             })
         return arr
 
@@ -378,7 +390,7 @@ class HttpDataModel(models.Model):
     header = models.TextField()
     delay_std = models.FloatField()
     timestamp = models.DateTimeField(auto_now=True)
-    origin = models.ForeignKey(PingOriginModel)
+    origin = models.ForeignKey(HttpOriginModel)
 
 
 class CommonReportModel(models.Model):
@@ -388,12 +400,12 @@ class CommonReportModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     type = models.IntegerField(default=0, choices=(
         (0, 'Custom'),
-        (1, 'PingSuccess'),
-        (2, 'PingDelay'),
-        (3, 'HttpSuccess'),
-        (4, 'HttpDelay'),
-        (5, 'RespSuccess'),
-        (6, 'RespDelay'),
+        (1, 'Ping Success'),
+        (2, 'Ping Delay'),
+        (3, 'Http Success'),
+        (4, 'Http Delay'),
+        (5, 'Response Success'),
+        (6, 'Response Delay'),
         (7, 'Exceptions'),
     ))
     value = models.FloatField(default=0.0)
@@ -402,24 +414,6 @@ class CommonReportModel(models.Model):
 
 class SiteReportModel(CommonReportModel):
     caches = models.TextField(blank=True)
-
-    def __unicode__(self):
-        title = '[SiteReportModel CustomObject]'
-        if self.type == 1:
-            title = 'Ping Success Percentage: ' + str(self.value) + '%'
-        elif self.type == 2:
-            title = 'Ping Average Delay: ' + str(self.value) + 'ms'
-        elif self.type == 3:
-            title = 'Http Response Success Percentage: ' + str(self.value) + '%'
-        elif self.type == 4:
-            title = 'Http Average Delay: ' + str(self.value) + 'ms'
-        elif self.type == 5:
-            title = 'Specific Response Success Percentage: ' + str(self.value) + '%'
-        elif self.type == 6:
-            title = 'Specific Response Delay: ' + str(self.value) + 'ms'
-        elif self.type == 7:
-            title = 'Exception Percentage: ' + str(self.value) + '%'
-        return title
 
     @staticmethod
     def get_latest_updated_time():
@@ -470,3 +464,17 @@ class ActivePackageModel(models.Model):
 
 class ActiveExceptionPackageModel(ActivePackageModel):
     pass
+
+
+class RespDataModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.ForeignKey(RespHostModel)
+    succeed = models.BooleanField(default=False)
+    code = models.IntegerField(default=200)
+    header = models.TextField()
+    delay_std = models.FloatField()
+    timestamp = models.DateTimeField(auto_now=True)
+    origin = models.ForeignKey(RespOriginModel)
+    passed = models.BooleanField(default=False)
+    size = models.IntegerField(default=0)
+    contents = models.TextField()

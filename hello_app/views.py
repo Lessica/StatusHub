@@ -78,7 +78,8 @@ def api_json(request):
         'messages_url': str(SiteConfigModel.get_config('api_messages_url')),
         'last_message_url': str(SiteConfigModel.get_config('api_last_message_url')),
         'hosts_url': str(SiteConfigModel.get_config('api_hosts_url')),
-        'origins_url': str(SiteConfigModel.get_config('api_origins_url'))
+        'origins_url': str(SiteConfigModel.get_config('api_origins_url')),
+        'types_url': str(SiteConfigModel.get_config('api_types_url'))
     }
     return HttpResponse(json.dumps(obj), content_type="application/json")
 
