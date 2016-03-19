@@ -48,26 +48,6 @@ class SiteConfigModel(models.Model):
     def add_config(config_name, config_value):
         SiteConfigModel.objects.filter(key=str(config_name)).update_or_create(key=str(config_name), value=config_value)
 
-    # Shell Config Method
-    @staticmethod
-    def init_config():
-        SiteConfigModel.add_config('default_site_message_content', 'All systems reporting at 100%')
-        SiteConfigModel.add_config('default_site_recent_duration', str(604800))
-        SiteConfigModel.add_config(
-            'default_origin_user_agent',
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"
-        )
-        SiteConfigModel.add_config('api_status_url', 'https://status.play4u.cn/api/status.json')
-        SiteConfigModel.add_config('api_messages_url', 'https://status.play4u.cn/api/messages.json')
-        SiteConfigModel.add_config('api_last_message_url', 'https://status.play4u.cn/api/last-message.json')
-        SiteConfigModel.add_config('api_hosts_url', 'https://status.play4u.cn/api/hosts.json')
-        SiteConfigModel.add_config('api_origins_url', 'https://status.play4u.cn/api/origins.json')
-        SiteConfigModel.add_config('api_types_url', 'https://status.play4u.cn/api/types.json')
-        SiteConfigModel.add_config('global_good_percentage_threshold', '99.00')
-        SiteConfigModel.add_config('global_minor_percentage_threshold', '90.00')
-        SiteConfigModel.add_config('global_major_percentage_threshold', '80.00')
-
 
 class CommonMessageModel(models.Model):
     id = models.IntegerField(primary_key=True, editable=False)
@@ -251,6 +231,7 @@ class CommonOriginModel(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
     sent_count = models.IntegerField(default=0)
     frequency = models.IntegerField(default=900)
+    secret = models.CharField(max_length=32, default='')
 
     @staticmethod
     def get_all_origins_arr():
@@ -264,7 +245,22 @@ class CommonOriginModel(models.Model):
         return arr
 
 
-class PingHostModel(CommonHostModel):
+class PingHostModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    checked_count = models.IntegerField(default=0)
+    random_id = models.CharField(max_length=6, default='')
+
     @staticmethod
     def get_brief_hosts_arr():
         ping_hosts = PingHostModel.objects.filter(enabled=True).order_by('-id')
@@ -276,8 +272,28 @@ class PingHostModel(CommonHostModel):
             })
         return arr
 
+    def __unicode__(self):
+        return self.name
 
-class PingOriginModel(CommonOriginModel):
+
+class PingOriginModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    origin = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    power = models.IntegerField()
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    sent_count = models.IntegerField(default=0)
+    frequency = models.IntegerField(default=900)
+    secret = models.CharField(max_length=32, default='')
+
     @staticmethod
     def get_brief_origins_arr():
         ping_origins = PingOriginModel.objects.filter(enabled=True).order_by('-id')
@@ -291,6 +307,9 @@ class PingOriginModel(CommonOriginModel):
             })
         return arr
 
+    def __unicode__(self):
+        return self.name
+
 
 class PingDataModel(models.Model):
     id = models.IntegerField(primary_key=True, editable=False)
@@ -301,7 +320,8 @@ class PingDataModel(models.Model):
     delay_avg = models.FloatField()
     delay_max = models.FloatField()
     delay_std = models.FloatField()
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
     origin = models.ForeignKey(PingOriginModel)
 
     def percentage_loss(self):
@@ -310,8 +330,25 @@ class PingDataModel(models.Model):
     def percentage_success(self):
         return float(self.received_times) / float(self.transmitted_times) * 100.0
 
+    def __unicode__(self):
+        return self.origin.origin + ' -> ' + self.host.host
 
-class HttpHostModel(CommonHostModel):
+
+class HttpHostModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    checked_count = models.IntegerField(default=0)
+    random_id = models.CharField(max_length=6, default='')
     secure = models.BooleanField(default=False)
     port = models.IntegerField()
 
@@ -328,8 +365,25 @@ class HttpHostModel(CommonHostModel):
             })
         return arr
 
+    def __unicode__(self):
+        return self.name
 
-class RespHostModel(HttpHostModel):
+
+class RespHostModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    checked_count = models.IntegerField(default=0)
+    random_id = models.CharField(max_length=6, default='')
     url = models.CharField(max_length=255)
     expected_contents = models.TextField()
 
@@ -345,7 +399,23 @@ class RespHostModel(HttpHostModel):
         return arr
 
 
-class HttpOriginModel(CommonOriginModel):
+class HttpOriginModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    origin = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    power = models.IntegerField()
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    sent_count = models.IntegerField(default=0)
+    frequency = models.IntegerField(default=900)
+    secret = models.CharField(max_length=32, default='')
     ua = models.CharField(
         default='',
         max_length=512
@@ -361,11 +431,35 @@ class HttpOriginModel(CommonOriginModel):
                 'host': http_origin.origin,
                 'power': http_origin.power,
                 'frequency': http_origin.frequency,
+                'ua': http_origin.ua
             })
         return arr
 
+    def __unicode__(self):
+        return self.name
 
-class RespOriginModel(HttpOriginModel):
+
+class RespOriginModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    origin = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    power = models.IntegerField()
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    sent_count = models.IntegerField(default=0)
+    frequency = models.IntegerField(default=900)
+    secret = models.CharField(max_length=32, default='')
+    ua = models.CharField(
+        default='',
+        max_length=512
+    )
     bandwidth = models.FloatField()
 
     @staticmethod
@@ -378,6 +472,7 @@ class RespOriginModel(HttpOriginModel):
                 'host': resp_origin.origin,
                 'power': resp_origin.power,
                 'frequency': resp_origin.frequency,
+                'ua': resp_origin.ua
             })
         return arr
 
@@ -391,6 +486,9 @@ class HttpDataModel(models.Model):
     delay_std = models.FloatField()
     timestamp = models.DateTimeField(auto_now=True)
     origin = models.ForeignKey(HttpOriginModel)
+
+    def __unicode__(self):
+        return self.host.host + ' [' + str(self.code) + ']'
 
 
 class CommonReportModel(models.Model):
@@ -440,7 +538,23 @@ class SiteStatusModel(models.Model):
         pass
 
 
-class ActiveHttpHostModel(HttpHostModel):
+class ActiveHttpHostModel(models.Model):
+    id = models.IntegerField(primary_key=True, editable=False)
+    host = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    checked_count = models.IntegerField(default=0)
+    random_id = models.CharField(max_length=6, default='')
+    secure = models.BooleanField(default=False)
+    port = models.IntegerField()
     framework = models.CharField(max_length=255)
     report_type = models.IntegerField(default=0, choices=(
         (0, 'exception'),

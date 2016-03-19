@@ -4,7 +4,7 @@ import time
 import json
 from django.shortcuts import render
 from django.http import HttpResponse
-from hello_app.models import SiteMessageModel, SiteConfigModel, CommonHostModel, CommonOriginModel
+from hello_app.models import SiteMessageModel, SiteConfigModel, CommonHostModel, CommonOriginModel, PingOriginModel, PingHostModel, PingDataModel, HttpHostModel, HttpOriginModel, HttpDataModel
 
 
 # Create your views here.
@@ -74,6 +74,7 @@ def messages(request, patterns):
 
 def api_json(request):
     obj = {
+        'submit_url': str(SiteConfigModel.get_config('api_submit_url')),
         'status_url': str(SiteConfigModel.get_config('api_status_url')),
         'messages_url': str(SiteConfigModel.get_config('api_messages_url')),
         'last_message_url': str(SiteConfigModel.get_config('api_last_message_url')),
@@ -143,4 +144,101 @@ def api_types(request):
             ]
         }
     ]
+    return HttpResponse(json.dumps(obj), content_type="application/json")
+
+
+def api_submit(request):
+    obj = {}
+    if len(request.POST) != 0:
+        json_text = request.POST['request']
+        json_obj = json.loads(json_text)
+        type = json_obj['type']
+        if type == 'ping':
+            req_origin = json_obj['origin']
+            req_secret = json_obj['secret']
+            origin_obj = PingOriginModel.objects.get(origin=req_origin, enabled=True)
+            if origin_obj.secret == req_secret:
+                req_data = json_obj['data']
+                for data_obj in req_data:
+                    host_name = data_obj['host']
+                    host_obj = PingHostModel.objects.get(host=host_name, enabled=True)
+                    if host_obj:
+                        new_data = PingDataModel()
+                        new_data.host = host_obj
+                        new_data.origin = origin_obj
+                        new_data.received_times = data_obj['received_times']
+                        new_data.transmitted_times = data_obj['transmitted_times']
+                        new_data.delay_avg = data_obj['delay_avg']
+                        new_data.delay_max = data_obj['delay_max']
+                        new_data.delay_min = data_obj['delay_min']
+                        new_data.delay_std = data_obj['delay_std']
+                        new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
+                        new_data.save()
+                        origin_obj.sent_count += 1
+                        origin_obj.save()
+                        host_obj.checked_count += 1
+                        host_obj.save()
+                        obj = {
+                            "status": 'ok'
+                        }
+                    else:
+                        obj = {
+                            "status": 'error',
+                            "message": 'Unknown Host.'
+                        }
+                        break
+            else:
+                obj = {
+                    "status": 'error',
+                    "message": 'Permission Denied.'
+                }
+        elif type == 'http':
+            req_origin = json_obj['origin']
+            req_secret = json_obj['secret']
+            origin_obj = HttpOriginModel.objects.get(origin=req_origin, enabled=True)
+            if origin_obj.secret == req_secret:
+                req_data = json_obj['data']
+                for data_obj in req_data:
+                    host_name = data_obj['host']
+                    host_obj = HttpHostModel.objects.get(host=host_name, enabled=True)
+                    if host_obj:
+                        new_data = HttpDataModel()
+                        new_data.host = host_obj
+                        new_data.origin = origin_obj
+                        new_data.succeed = data_obj['succeed']
+                        new_data.code = data_obj['code']
+                        new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
+                        new_data.delay_std = data_obj['delay_std']
+                        new_data.header = json.dumps(data_obj['header'])
+                        new_data.save()
+                        origin_obj.sent_count += 1
+                        origin_obj.save()
+                        host_obj.checked_count += 1
+                        host_obj.save()
+                        obj = {
+                            "status": 'ok'
+                        }
+                    else:
+                        obj = {
+                            "status": 'error',
+                            "message": 'Unknown Host.'
+                        }
+                        break
+            else:
+                obj = {
+                    "status": 'error',
+                    "message": 'Permission Denied.'
+                }
+        elif type == 'resp':
+            pass
+        else:
+            obj = {
+                "status": 'error',
+                "message": 'Invalid Data Type.'
+            }
+    else:
+        obj = {
+            "status": 'error',
+            "message": 'POST Request Only.'
+        }
     return HttpResponse(json.dumps(obj), content_type="application/json")

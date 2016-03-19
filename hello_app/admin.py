@@ -33,13 +33,46 @@ class SiteStatusAdmin(admin.ModelAdmin):
     pass
 admin.site.register(SiteStatusModel, SiteStatusAdmin)
 
-admin.site.register(PingOriginModel)
-admin.site.register(PingHostModel)
-admin.site.register(PingDataModel)
 
-admin.site.register(HttpOriginModel)
-admin.site.register(HttpHostModel)
-admin.site.register(HttpDataModel)
+class PingOriginAdmin(admin.ModelAdmin):
+    list_display = ('origin', 'name', 'power', 'enabled', 'sent_count', 'modified_at')
+    search_fields = ['origin', 'name']
+    list_filter = ['enabled']
+admin.site.register(PingOriginModel, PingOriginAdmin)
+
+
+class PingHostAdmin(admin.ModelAdmin):
+    list_display = ('host', 'name', 'enabled', 'checked_count', 'modified_at')
+    search_fields = ['host', 'name']
+    list_filter = ['enabled']
+admin.site.register(PingHostModel, PingHostAdmin)
+
+
+class PingDataAdmin(admin.ModelAdmin):
+    list_display = ('host', 'origin', 'transmitted_times', 'received_times', 'delay_avg', 'timestamp')
+    search_fields = ['host', 'origin']
+admin.site.register(PingDataModel, PingDataAdmin)
+
+
+class HttpOriginAdmin(admin.ModelAdmin):
+    list_display = ('origin', 'name', 'power', 'enabled', 'sent_count', 'modified_at')
+    search_fields = ['origin', 'name']
+    list_filter = ['enabled']
+admin.site.register(HttpOriginModel, HttpOriginAdmin)
+
+
+class HttpHostAdmin(admin.ModelAdmin):
+    list_display = ('host', 'port', 'name', 'enabled', 'secure', 'checked_count', 'modified_at')
+    search_fields = ['host', 'name']
+    list_filter = ['enabled', 'secure']
+admin.site.register(HttpHostModel, HttpHostAdmin)
+
+
+class HttpDataAdmin(admin.ModelAdmin):
+    list_display = ('host', 'origin', 'succeed', 'code', 'delay_std', 'timestamp')
+    search_fields = ['host', 'origin']
+    list_filter = ['succeed']
+admin.site.register(HttpDataModel, HttpDataAdmin)
 
 admin.site.register(RespOriginModel)
 admin.site.register(RespHostModel)

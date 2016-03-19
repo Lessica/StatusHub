@@ -206,6 +206,78 @@ function apiStatus(data) {
 ]
 </pre>
                     </dd>
+
+                    <h3>提交监测数据</h3>
+                    <dt id='api-submit'>
+                        <a href='/api/submit.json'>GET /api/submit.json</a>
+                    </dt>
+                    <dd>监测点提交相关数据.</dd>
+                    <dd>
+<pre class='terminal'>
+{
+    "origin": "127.0.0.1-ping",
+    "data": [
+        {
+            "received_times": 4,
+            "delay_avg": 3.216,
+            "host": "180.97.33.107",
+            "delay_max": 3.5,
+            "timestamp": 1458390221,
+            "delay_std": 0.178,
+            "transmitted_times": 4,
+            "delay_min": 3.014
+        },
+        {
+            "received_times": 4,
+            "delay_avg": 3.24,
+            "host": "180.97.33.107",
+            "delay_max": 3.367,
+            "timestamp": 1458390224,
+            "delay_std": 0.087,
+            "transmitted_times": 4,
+            "delay_min": 3.123
+        },
+        {
+            "received_times": 4,
+            "delay_avg": 3.033,
+            "host": "180.97.33.107",
+            "delay_max": 3.175,
+            "timestamp": 1458390227,
+            "delay_std": 0.089,
+            "transmitted_times": 4,
+            "delay_min": 2.947
+        },
+        {
+            "received_times": 4,
+            "delay_avg": 3.296,
+            "host": "180.97.33.107",
+            "delay_max": 3.725,
+            "timestamp": 1458390231,
+            "delay_std": 0.286,
+            "transmitted_times": 4,
+            "delay_min": 3.006
+        },
+        {
+            "received_times": 4,
+            "delay_avg": 3.209,
+            "host": "180.97.33.107",
+            "delay_max": 3.344,
+            "timestamp": 1458390234,
+            "delay_std": 0.086,
+            "transmitted_times": 4,
+            "delay_min": 3.106
+        }
+    ],
+    "secret": "pkR6s232wha3z274",
+    "type": "ping"
+}
+</pre>
+<pre class='terminal'>
+{
+    "status": "ok"
+}
+</pre>
+                    </dd>
                 </dl>
             </div>
         </div>

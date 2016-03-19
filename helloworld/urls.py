@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^messages/$|^messages/(\d{4}-\d{2}-\d{2})$', hello_views.messages),
     url(r'^api/$', hello_views.api),
     url(r'^api.json$', hello_views.api_json),
+    url(r'^api/submit.json$', hello_views.api_submit),
     url(r'^api/status.json$', hello_views.api_status),
     url(r'^api/last-message.json$', hello_views.api_last_message),
     url(r'^api/messages.json$', hello_views.api_messages),
