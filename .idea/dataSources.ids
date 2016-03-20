@@ -174,15 +174,6 @@
       <column name="secret" sqlType="VARCHAR(32)" precision="0" scale="-1" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
     </table>
-    <table name="hello_app_commonreportmodel" schema="" catalog="" type="TABLE">
-      <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
-      <column name="started_at" sqlType="DATETIME" precision="0" scale="-1" nullable="false" jdbcType="12"/>
-      <column name="created_at" sqlType="DATETIME" precision="0" scale="-1" nullable="false" jdbcType="12"/>
-      <column name="type" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
-      <column name="value" sqlType="REAL" precision="0" scale="-1" nullable="false" jdbcType="6"/>
-      <column name="comments" sqlType="TEXT" precision="0" scale="-1" nullable="false" jdbcType="12"/>
-      <primary-key columns="id"/>
-    </table>
     <table name="hello_app_httpdatamodel" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
       <column name="succeed" sqlType="BOOL" precision="0" scale="-1" nullable="false" jdbcType="4"/>
@@ -225,6 +216,14 @@
       <column name="ua" sqlType="VARCHAR(512)" precision="0" scale="-1" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
     </table>
+    <table name="hello_app_httpreportmodel" schema="" catalog="" type="TABLE">
+      <column name="sitereportmodel_ptr_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <column name="host_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <primary-key columns="sitereportmodel_ptr_id"/>
+      <foreign-key name="#FAKE_hello_app_httpreportmodel_1" columns="host_id" ref-table="hello_app_httphostmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_hello_app_httpreportmodel_2" columns="sitereportmodel_ptr_id" ref-table="hello_app_sitereportmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="hello_app_httpreportmodel_8396f175" unique="true" columns="host_id"/>
+    </table>
     <table name="hello_app_pingdatamodel" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
       <column name="transmitted_times" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
@@ -266,6 +265,14 @@
       <column name="frequency" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
       <column name="secret" sqlType="VARCHAR(32)" precision="0" scale="-1" nullable="false" jdbcType="12"/>
       <primary-key columns="id"/>
+    </table>
+    <table name="hello_app_pingreportmodel" schema="" catalog="" type="TABLE">
+      <column name="sitereportmodel_ptr_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <column name="host_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <primary-key columns="sitereportmodel_ptr_id"/>
+      <foreign-key name="#FAKE_hello_app_pingreportmodel_1" columns="host_id" ref-table="hello_app_pinghostmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_hello_app_pingreportmodel_2" columns="sitereportmodel_ptr_id" ref-table="hello_app_sitereportmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="hello_app_pingreportmodel_8396f175" unique="true" columns="host_id"/>
     </table>
     <table name="hello_app_respdatamodel" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
@@ -313,6 +320,14 @@
       <column name="bandwidth" sqlType="REAL" precision="0" scale="-1" nullable="false" jdbcType="6"/>
       <primary-key columns="id"/>
     </table>
+    <table name="hello_app_respreportmodel" schema="" catalog="" type="TABLE">
+      <column name="sitereportmodel_ptr_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <column name="host_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <primary-key columns="sitereportmodel_ptr_id"/>
+      <foreign-key name="#FAKE_hello_app_respreportmodel_1" columns="host_id" ref-table="hello_app_resphostmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <foreign-key name="#FAKE_hello_app_respreportmodel_2" columns="sitereportmodel_ptr_id" ref-table="hello_app_sitereportmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <index name="hello_app_respreportmodel_8396f175" unique="true" columns="host_id"/>
+    </table>
     <table name="hello_app_siteconfigcategorymodel" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
       <column name="name" sqlType="VARCHAR(255)" precision="0" scale="-1" nullable="false" jdbcType="12"/>
@@ -337,10 +352,14 @@
       <foreign-key name="#FAKE_hello_app_sitemessagemodel_1" columns="commonmessagemodel_ptr_id" ref-table="hello_app_commonmessagemodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
     </table>
     <table name="hello_app_sitereportmodel" schema="" catalog="" type="TABLE">
-      <column name="commonreportmodel_ptr_id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
-      <column name="caches" sqlType="TEXT" precision="0" scale="-1" nullable="false" jdbcType="12"/>
-      <primary-key columns="commonreportmodel_ptr_id"/>
-      <foreign-key name="#FAKE_hello_app_sitereportmodel_1" columns="commonreportmodel_ptr_id" ref-table="hello_app_commonreportmodel" ref-schema="" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="1"/>
+      <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <column name="name" sqlType="VARCHAR(255)" precision="0" scale="-1" nullable="false" jdbcType="12"/>
+      <column name="started_at" sqlType="DATETIME" precision="0" scale="-1" nullable="false" jdbcType="12"/>
+      <column name="created_at" sqlType="DATETIME" precision="0" scale="-1" nullable="false" jdbcType="12"/>
+      <column name="type" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>
+      <column name="value" sqlType="REAL" precision="0" scale="-1" nullable="false" jdbcType="6"/>
+      <column name="comments" sqlType="TEXT" precision="0" scale="-1" nullable="false" jdbcType="12"/>
+      <primary-key columns="id"/>
     </table>
     <table name="hello_app_sitestatusmodel" schema="" catalog="" type="TABLE">
       <column name="id" sqlType="INTEGER" precision="0" scale="-1" nullable="false" jdbcType="4"/>

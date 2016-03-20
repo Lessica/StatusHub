@@ -17,8 +17,8 @@ admin.site.register(SiteConfigModel, SiteConfigAdmin)
 
 
 class SiteReportAdmin(admin.ModelAdmin):
-    list_display = ('host', 'type', 'value', 'created_at')
-    search_fields = ['host']
+    list_display = ('name', 'type', 'value', 'created_at')
+    search_fields = ['name']
     list_filter = ['type']
 admin.site.register(SiteReportModel, SiteReportAdmin)
 

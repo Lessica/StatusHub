@@ -94,10 +94,9 @@ class SiteMessageModel(CommonMessageModel):
     def get_recent_messages_list():
         req_time = int(time.mktime(datetime.datetime.utcnow().timetuple()))
         req_start = datetime.datetime.fromtimestamp(
-            req_time - int(SiteConfigModel.get_config('default_site_recent_duration')),
-            tz=pytz.utc
+            req_time - int(SiteConfigModel.get_config('default_site_recent_duration'))
         )
-        req_end = datetime.datetime.fromtimestamp(req_time, tz=pytz.utc)
+        req_end = datetime.datetime.fromtimestamp(req_time)
         recent_messages_list = SiteMessageModel.objects.filter(
             enabled=True,
             created_at__range=(req_start, req_end)
@@ -118,7 +117,7 @@ class SiteMessageModel(CommonMessageModel):
 
     @staticmethod
     def has_page_prev_than_time(req_time):
-        req_pos = datetime.datetime.fromtimestamp(req_time, tz=pytz.utc)
+        req_pos = datetime.datetime.fromtimestamp(req_time)
         obj = SiteMessageModel.objects.filter(created_at__lte=req_pos)[:1]
         if not obj:
             return None
@@ -127,7 +126,7 @@ class SiteMessageModel(CommonMessageModel):
 
     @staticmethod
     def has_page_next_than_time(req_time):
-        req_pos = datetime.datetime.fromtimestamp(req_time, tz=pytz.utc)
+        req_pos = datetime.datetime.fromtimestamp(req_time)
         obj = SiteMessageModel.objects.filter(created_at__gte=req_pos)[:1]
         if not obj:
             return None
@@ -136,8 +135,8 @@ class SiteMessageModel(CommonMessageModel):
 
     @staticmethod
     def get_weekly_messages_list(req_time):
-        req_start = datetime.datetime.fromtimestamp(req_time, tz=pytz.utc)
-        req_end = datetime.datetime.fromtimestamp(req_time + 604800, tz=pytz.utc)
+        req_start = datetime.datetime.fromtimestamp(req_time)
+        req_end = datetime.datetime.fromtimestamp(req_time + 604800)
         weekly_messages_list = SiteMessageModel.objects.filter(
             enabled=True,
             created_at__range=(req_start, req_end)
@@ -491,9 +490,9 @@ class HttpDataModel(models.Model):
         return self.host.host + ' [' + str(self.code) + ']'
 
 
-class CommonReportModel(models.Model):
+class SiteReportModel(models.Model):
     id = models.IntegerField(primary_key=True, editable=False)
-    host = models.ForeignKey(CommonHostModel),
+    name = models.CharField(max_length=255)
     started_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     type = models.IntegerField(default=0, choices=(
@@ -509,21 +508,81 @@ class CommonReportModel(models.Model):
     value = models.FloatField(default=0.0)
     comments = models.TextField(default='No comment')
 
-
-class SiteReportModel(CommonReportModel):
-    caches = models.TextField(blank=True)
-
     @staticmethod
     def get_latest_updated_tuple():
         obj = SiteReportModel.objects.order_by('-id')[:1]
         if not obj:
             return None
         t_obj = obj[0].created_at
-        return t_obj
+        return t_obj.timetuple()
 
     @staticmethod
     def get_latest_updated_time():
         return SiteMessageModel.get_cst_time_by_value(SiteReportModel.get_latest_updated_tuple())
+
+    @staticmethod
+    def generate_new_http_report(host_obj, start_at):
+        last_time = 0
+        tuple_obj = None
+        generate_interval = int(SiteConfigModel.get_config('api_http_report_interval'))
+        last_obj = HttpReportModel.objects.filter(
+            host=host_obj
+        ).order_by('-id')[:1]
+        if last_obj:
+            t_obj = last_obj[0].created_at
+            tuple_obj = t_obj.timetuple()
+        if tuple_obj is not None:
+            last_time = time.mktime(SiteReportModel.get_latest_updated_tuple())
+        if (last_time == 0) or (time.time() - last_time >= generate_interval):
+            req_start = datetime.datetime.fromtimestamp(
+                time.time() - generate_interval
+            )
+            recent_http_reports = HttpDataModel.objects.filter(
+                host=host_obj,
+                timestamp__gte=req_start
+            ).values('succeed', 'delay_std').order_by('-id')
+            succeed_rate = 0.0
+            delay_avg = 9999.0
+            total_num = len(recent_http_reports)
+            if total_num != 0:
+                total_delay = 0.0
+                succeed_num = 0
+                for report in recent_http_reports:
+                    total_delay += report['delay_std']
+                    if report['succeed']:
+                        succeed_num += 1
+                succeed_rate = float(succeed_num) / total_num
+                delay_avg = float(total_delay) / total_num
+
+            new_report = HttpReportModel()
+            new_report.name = host_obj.name
+            new_report.host = host_obj
+            new_report.type = 3
+            new_report.started_at = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                  time.localtime(start_at))
+            new_report.value = succeed_rate
+            new_report.save()
+
+            new_report = HttpReportModel()
+            new_report.name = host_obj.name
+            new_report.host = host_obj
+            new_report.type = 4
+            new_report.started_at = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                  time.localtime(start_at))
+            new_report.value = delay_avg
+            new_report.save()
+
+
+class HttpReportModel(SiteReportModel):
+    host = models.ForeignKey(HttpHostModel)
+
+
+class PingReportModel(SiteReportModel):
+    host = models.ForeignKey(PingHostModel)
+
+
+class RespReportModel(SiteReportModel):
+    host = models.ForeignKey(RespHostModel)
 
 
 class SiteStatusModel(models.Model):

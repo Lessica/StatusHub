@@ -2,9 +2,10 @@
 import datetime
 import time
 import json
+import random
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseServerError
-from hello_app.models import SiteMessageModel, SiteConfigModel, CommonHostModel, CommonOriginModel, PingOriginModel, PingHostModel, PingDataModel, HttpHostModel, HttpOriginModel, HttpDataModel
+from hello_app.models import *
 
 
 # Create your views here.
@@ -187,46 +188,54 @@ def api_submit(request):
     if len(request.POST) != 0:
         json_text = request.POST['request']
         json_obj = json.loads(json_text)
-        type = json_obj['type']
-        if type == 'ping':
+        req_type = json_obj['type']
+        if req_type == 'ping':
             req_origin = json_obj['origin']
             req_secret = json_obj['secret']
             origin_obj = PingOriginModel.objects.get(origin=req_origin, enabled=True)
             if origin_obj:
                 if origin_obj.secret == req_secret:
-                    host_name = json_obj['host']
-                    host_obj = PingHostModel.objects.get(host=host_name, enabled=True)
-                    if host_obj:
-                        req_data = json_obj['data']
-                        for data_obj in req_data:
-                            origin_time = time.mktime(origin_obj.modified_at.timetuple())
-                            host_time = time.mktime(host_obj.modified_at.timetuple())
-                            if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
-                                new_data = PingDataModel()
-                                new_data.host = host_obj
-                                new_data.origin = origin_obj
-                                new_data.received_times = data_obj['received_times']
-                                new_data.transmitted_times = data_obj['transmitted_times']
-                                new_data.delay_avg = data_obj['delay_avg']
-                                new_data.delay_max = data_obj['delay_max']
-                                new_data.delay_min = data_obj['delay_min']
-                                new_data.delay_std = data_obj['delay_std']
-                                new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S',
-                                                                   time.localtime(int(data_obj['timestamp'])))
-                                new_data.save()
-                                obj = {
-                                    "status": 'ok'
-                                }
-                            else:
-                                obj = {
-                                    "status": 'restart',
-                                    "message": 'Restart Program.'
-                                }
-                                break
+                    # Random dismiss packet
+                    random_int = random.randint(1, 100)
+                    if random_int <= int(origin_obj.power):
+                        host_name = json_obj['host']
+                        host_obj = PingHostModel.objects.get(host=host_name, enabled=True)
+                        if host_obj:
+                            req_data = json_obj['data']
+                            for data_obj in req_data:
+                                origin_time = time.mktime(origin_obj.modified_at.timetuple())
+                                host_time = time.mktime(host_obj.modified_at.timetuple())
+                                if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
+                                    new_data = PingDataModel()
+                                    new_data.host = host_obj
+                                    new_data.origin = origin_obj
+                                    new_data.received_times = data_obj['received_times']
+                                    new_data.transmitted_times = data_obj['transmitted_times']
+                                    new_data.delay_avg = data_obj['delay_avg']
+                                    new_data.delay_max = data_obj['delay_max']
+                                    new_data.delay_min = data_obj['delay_min']
+                                    new_data.delay_std = data_obj['delay_std']
+                                    new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                                       time.localtime(int(data_obj['timestamp'])))
+                                    new_data.save()
+                                    obj = {
+                                        "status": 'ok'
+                                    }
+                                else:
+                                    obj = {
+                                        "status": 'restart',
+                                        "message": 'Restart Program.'
+                                    }
+                                    break
+                        else:
+                            obj = {
+                                "status": 'error',
+                                "message": 'Unknown Host.'
+                        }
                     else:
                         obj = {
-                            "status": 'error',
-                            "message": 'Unknown Host.'
+                            "status": 'ok',
+                            "message": 'Dismissed.'
                         }
                 else:
                     obj = {
@@ -238,42 +247,53 @@ def api_submit(request):
                     "status": 'error',
                     "message": 'Unknown Origin.'
                 }
-        elif type == 'http':
+        elif req_type == 'http':
             req_origin = json_obj['origin']
             req_secret = json_obj['secret']
             origin_obj = HttpOriginModel.objects.get(origin=req_origin, enabled=True)
             if origin_obj:
                 if origin_obj.secret == req_secret:
-                    host_name = json_obj['host']
-                    host_obj = HttpHostModel.objects.get(host=host_name, enabled=True)
-                    if host_obj:
-                        req_data = json_obj['data']
-                        for data_obj in req_data:
-                            origin_time = time.mktime(origin_obj.modified_at.timetuple())
-                            host_time = time.mktime(host_obj.modified_at.timetuple())
-                            if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
-                                new_data = HttpDataModel()
-                                new_data.host = host_obj
-                                new_data.origin = origin_obj
-                                new_data.succeed = data_obj['succeed']
-                                new_data.code = data_obj['code']
-                                new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
-                                new_data.delay_std = data_obj['delay_std']
-                                new_data.header = json.dumps(data_obj['header'])
-                                new_data.save()
-                                obj = {
-                                    "status": 'ok'
-                                }
-                            else:
-                                obj = {
-                                    "status": 'restart',
-                                    "message": 'Restart Program.'
-                                }
-                                break
+                    # Random dismiss packet
+                    random_int = random.randint(1, 100)
+                    if random_int <= int(origin_obj.power):
+                        host_name = json_obj['host']
+                        host_obj = HttpHostModel.objects.get(host=host_name, enabled=True)
+                        if host_obj:
+                            req_data = json_obj['data']
+                            for data_obj in req_data:
+                                origin_time = time.mktime(origin_obj.modified_at.timetuple())
+                                host_time = time.mktime(host_obj.modified_at.timetuple())
+                                if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
+                                    new_data = HttpDataModel()
+                                    new_data.host = host_obj
+                                    new_data.origin = origin_obj
+                                    new_data.succeed = data_obj['succeed']
+                                    new_data.code = data_obj['code']
+                                    new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                                       time.localtime(int(data_obj['timestamp'])))
+                                    new_data.delay_std = data_obj['delay_std']
+                                    new_data.header = json.dumps(data_obj['header'])
+                                    new_data.save()
+                                    obj = {
+                                        "status": 'ok'
+                                    }
+                                    # Check Last Host Report
+                                    SiteReportModel.generate_new_http_report(host_obj, int(json_obj['start']))
+                                else:
+                                    obj = {
+                                        "status": 'restart',
+                                        "message": 'Restart Program.'
+                                    }
+                                    break
+                        else:
+                            obj = {
+                                "status": 'error',
+                                "message": 'Unknown Host.'
+                            }
                     else:
                         obj = {
-                            "status": 'error',
-                            "message": 'Unknown Host.'
+                            "status": 'ok',
+                            "message": 'Dismissed.'
                         }
                 else:
                     obj = {
@@ -285,7 +305,7 @@ def api_submit(request):
                     "status": 'error',
                     "message": 'Unknown Origin.'
                 }
-        elif type == 'resp':
+        elif req_type == 'resp':
             pass
         else:
             obj = {

@@ -126,6 +126,7 @@ def ping_loop(host, freq, flag, s_url):
                 elif report_ret['status'] == 'error':
                     print 'Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(_r.text)
                 elif report_ret['status'] == 'restart':
+                    print 'Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(_r.text)
                     restart_program()
                 elif report_ret['status'] == 'shutdown':
                     print 'Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(_r.text)
@@ -157,6 +158,7 @@ def http_loop(host_dict, freq, flag, s_url):
         uri += host_dict['host'] + ':' + str(host_dict['port'])
         print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Frequency = ' + str(freq)
         ret_code = 0
+        ret_delay = 12000
         ret_header = {}
         micro_start = datetime.datetime.utcnow()
         try:
@@ -169,11 +171,11 @@ def http_loop(host_dict, freq, flag, s_url):
             ret_code = 0
         if ret_code == 200:
             ret_succeed = True
+            micro_end = datetime.datetime.utcnow()
+            micro_delay = (micro_end - micro_start)
+            ret_delay = micro_delay.microseconds / 1000
         else:
             ret_succeed = False
-        micro_end = datetime.datetime.utcnow()
-        micro_delay = (micro_end - micro_start)
-        ret_delay = micro_delay.microseconds / 1000
         # build result dict
         result = {
             'succeed': ret_succeed,
@@ -203,7 +205,7 @@ def http_loop(host_dict, freq, flag, s_url):
                 elif report_ret['status'] == 'error':
                     print 'Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(_r.text)
                 elif report_ret['status'] == 'restart':
-                    print 'Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(_r.text)
+                    print 'Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(_r.text)
                     restart_program()
                 elif report_ret['status'] == 'shutdown':
                     print 'Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(_r.text)
