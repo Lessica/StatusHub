@@ -3,7 +3,7 @@ import datetime
 import time
 import json
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 from hello_app.models import SiteMessageModel, SiteConfigModel, CommonHostModel, CommonOriginModel, PingOriginModel, PingHostModel, PingDataModel, HttpHostModel, HttpOriginModel, HttpDataModel
 
 
@@ -86,10 +86,20 @@ def api_json(request):
 
 
 def api_status(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     return HttpResponse(u"Not ready")
 
 
 def api_last_message(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     latest_message = SiteMessageModel.get_latest_message_model()
     obj = {
         'status': latest_message.get_status_style_class(),
@@ -100,21 +110,41 @@ def api_last_message(request):
 
 
 def api_messages(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     obj = SiteMessageModel.get_recent_messages_list()
     return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_hosts(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     obj = CommonHostModel.get_all_hosts_arr()
     return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_origins(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     obj = CommonOriginModel.get_all_origins_arr()
     return HttpResponse(json.dumps(obj), content_type="application/json")
 
 
 def api_types(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponseServerError(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     obj = [
         {
             "type": "ping",
@@ -148,6 +178,11 @@ def api_types(request):
 
 
 def api_submit(request):
+    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
+        return HttpResponse(json.dumps({
+            "status": "shutdown",
+            "message": "All servers should shutdown."
+        }), content_type="application/json")
     obj = {}
     if len(request.POST) != 0:
         json_text = request.POST['request']
@@ -157,77 +192,98 @@ def api_submit(request):
             req_origin = json_obj['origin']
             req_secret = json_obj['secret']
             origin_obj = PingOriginModel.objects.get(origin=req_origin, enabled=True)
-            if origin_obj.secret == req_secret:
-                req_data = json_obj['data']
-                for data_obj in req_data:
-                    host_name = data_obj['host']
+            if origin_obj:
+                if origin_obj.secret == req_secret:
+                    host_name = json_obj['host']
                     host_obj = PingHostModel.objects.get(host=host_name, enabled=True)
                     if host_obj:
-                        new_data = PingDataModel()
-                        new_data.host = host_obj
-                        new_data.origin = origin_obj
-                        new_data.received_times = data_obj['received_times']
-                        new_data.transmitted_times = data_obj['transmitted_times']
-                        new_data.delay_avg = data_obj['delay_avg']
-                        new_data.delay_max = data_obj['delay_max']
-                        new_data.delay_min = data_obj['delay_min']
-                        new_data.delay_std = data_obj['delay_std']
-                        new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
-                        new_data.save()
-                        origin_obj.sent_count += 1
-                        origin_obj.save()
-                        host_obj.checked_count += 1
-                        host_obj.save()
-                        obj = {
-                            "status": 'ok'
-                        }
+                        req_data = json_obj['data']
+                        for data_obj in req_data:
+                            origin_time = time.mktime(origin_obj.modified_at.timetuple())
+                            host_time = time.mktime(host_obj.modified_at.timetuple())
+                            if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
+                                new_data = PingDataModel()
+                                new_data.host = host_obj
+                                new_data.origin = origin_obj
+                                new_data.received_times = data_obj['received_times']
+                                new_data.transmitted_times = data_obj['transmitted_times']
+                                new_data.delay_avg = data_obj['delay_avg']
+                                new_data.delay_max = data_obj['delay_max']
+                                new_data.delay_min = data_obj['delay_min']
+                                new_data.delay_std = data_obj['delay_std']
+                                new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                                   time.localtime(int(data_obj['timestamp'])))
+                                new_data.save()
+                                obj = {
+                                    "status": 'ok'
+                                }
+                            else:
+                                obj = {
+                                    "status": 'restart',
+                                    "message": 'Restart Program.'
+                                }
+                                break
                     else:
                         obj = {
                             "status": 'error',
                             "message": 'Unknown Host.'
                         }
-                        break
+                else:
+                    obj = {
+                        "status": 'error',
+                        "message": 'Permission Denied.'
+                    }
             else:
                 obj = {
                     "status": 'error',
-                    "message": 'Permission Denied.'
+                    "message": 'Unknown Origin.'
                 }
         elif type == 'http':
             req_origin = json_obj['origin']
             req_secret = json_obj['secret']
             origin_obj = HttpOriginModel.objects.get(origin=req_origin, enabled=True)
-            if origin_obj.secret == req_secret:
-                req_data = json_obj['data']
-                for data_obj in req_data:
-                    host_name = data_obj['host']
+            if origin_obj:
+                if origin_obj.secret == req_secret:
+                    host_name = json_obj['host']
                     host_obj = HttpHostModel.objects.get(host=host_name, enabled=True)
                     if host_obj:
-                        new_data = HttpDataModel()
-                        new_data.host = host_obj
-                        new_data.origin = origin_obj
-                        new_data.succeed = data_obj['succeed']
-                        new_data.code = data_obj['code']
-                        new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
-                        new_data.delay_std = data_obj['delay_std']
-                        new_data.header = json.dumps(data_obj['header'])
-                        new_data.save()
-                        origin_obj.sent_count += 1
-                        origin_obj.save()
-                        host_obj.checked_count += 1
-                        host_obj.save()
-                        obj = {
-                            "status": 'ok'
-                        }
+                        req_data = json_obj['data']
+                        for data_obj in req_data:
+                            origin_time = time.mktime(origin_obj.modified_at.timetuple())
+                            host_time = time.mktime(host_obj.modified_at.timetuple())
+                            if origin_time <= json_obj['start'] and host_time <= json_obj['start']:
+                                new_data = HttpDataModel()
+                                new_data.host = host_obj
+                                new_data.origin = origin_obj
+                                new_data.succeed = data_obj['succeed']
+                                new_data.code = data_obj['code']
+                                new_data.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(data_obj['timestamp'])))
+                                new_data.delay_std = data_obj['delay_std']
+                                new_data.header = json.dumps(data_obj['header'])
+                                new_data.save()
+                                obj = {
+                                    "status": 'ok'
+                                }
+                            else:
+                                obj = {
+                                    "status": 'restart',
+                                    "message": 'Restart Program.'
+                                }
+                                break
                     else:
                         obj = {
                             "status": 'error',
                             "message": 'Unknown Host.'
                         }
-                        break
+                else:
+                    obj = {
+                        "status": 'error',
+                        "message": 'Permission Denied.'
+                    }
             else:
                 obj = {
                     "status": 'error',
-                    "message": 'Permission Denied.'
+                    "message": 'Unknown Origin.'
                 }
         elif type == 'resp':
             pass

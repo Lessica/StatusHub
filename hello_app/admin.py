@@ -11,6 +11,7 @@ admin.site.register(SiteConfigCategoryModel, SiteConfigCategoryAdmin)
 
 class SiteConfigAdmin(admin.ModelAdmin):
     list_display = ('key', 'value', 'category', 'modified_at')
+    list_filter = ['category']
     search_fields = ['key']
 admin.site.register(SiteConfigModel, SiteConfigAdmin)
 
@@ -51,6 +52,7 @@ admin.site.register(PingHostModel, PingHostAdmin)
 class PingDataAdmin(admin.ModelAdmin):
     list_display = ('host', 'origin', 'transmitted_times', 'received_times', 'delay_avg', 'timestamp')
     search_fields = ['host', 'origin']
+    list_filter = ['host', 'origin']
 admin.site.register(PingDataModel, PingDataAdmin)
 
 
@@ -71,7 +73,7 @@ admin.site.register(HttpHostModel, HttpHostAdmin)
 class HttpDataAdmin(admin.ModelAdmin):
     list_display = ('host', 'origin', 'succeed', 'code', 'delay_std', 'timestamp')
     search_fields = ['host', 'origin']
-    list_filter = ['succeed']
+    list_filter = ['host', 'origin', 'succeed']
 admin.site.register(HttpDataModel, HttpDataAdmin)
 
 admin.site.register(RespOriginModel)

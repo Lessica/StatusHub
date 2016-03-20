@@ -514,12 +514,16 @@ class SiteReportModel(CommonReportModel):
     caches = models.TextField(blank=True)
 
     @staticmethod
-    def get_latest_updated_time():
+    def get_latest_updated_tuple():
         obj = SiteReportModel.objects.order_by('-id')[:1]
         if not obj:
             return None
         t_obj = obj[0].created_at
-        return SiteMessageModel.get_cst_time_by_value(t_obj)
+        return t_obj
+
+    @staticmethod
+    def get_latest_updated_time():
+        return SiteMessageModel.get_cst_time_by_value(SiteReportModel.get_latest_updated_tuple())
 
 
 class SiteStatusModel(models.Model):
