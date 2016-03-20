@@ -521,6 +521,59 @@ class SiteReportModel(models.Model):
         return SiteMessageModel.get_cst_time_by_value(SiteReportModel.get_latest_updated_tuple())
 
     @staticmethod
+    def generate_new_ping_report(host_obj, start_at):
+        last_time = 0
+        tuple_obj = None
+        generate_interval = int(SiteConfigModel.get_config('api_ping_report_interval'))
+        last_obj = PingReportModel.objects.filter(
+            host=host_obj
+        ).order_by('-id')[:1]
+        if last_obj:
+            t_obj = last_obj[0].created_at
+            tuple_obj = t_obj.timetuple()
+        if tuple_obj is not None:
+            last_time = time.mktime(tuple_obj)
+        if (last_time == 0) or (time.time() - last_time >= generate_interval):
+            req_start = datetime.datetime.fromtimestamp(
+                time.time() - generate_interval
+            )
+            recent_ping_reports = PingDataModel.objects.filter(
+                host=host_obj,
+                timestamp__gte=req_start
+            ).values('transmitted_times', 'received_times', 'delay_avg').order_by('-id')
+            total_num = len(recent_ping_reports)
+            succeed_rate = 0.0
+            delay_avg = 9999.0
+            if total_num != 0:
+                total_times= 0
+                succeed_times = 0
+                total_delay = 0.0
+                for report in recent_ping_reports:
+                    total_times += int(report['transmitted_times'])
+                    succeed_times += int(report['received_times'])
+                    total_delay += float(report['delay_avg'])
+                succeed_rate = float(succeed_times) / total_times
+                delay_avg = float(total_delay) / total_num
+
+            new_report = PingReportModel()
+            new_report.name = host_obj.name
+            new_report.host = host_obj
+            new_report.type = 1
+            new_report.started_at = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                  time.localtime(start_at))
+            new_report.value = succeed_rate
+            new_report.save()
+
+            new_report = PingReportModel()
+            new_report.name = host_obj.name
+            new_report.host = host_obj
+            new_report.type = 2
+            new_report.started_at = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                  time.localtime(start_at))
+            new_report.value = delay_avg
+            new_report.save()
+
+    @staticmethod
     def generate_new_http_report(host_obj, start_at):
         last_time = 0
         tuple_obj = None
@@ -532,7 +585,7 @@ class SiteReportModel(models.Model):
             t_obj = last_obj[0].created_at
             tuple_obj = t_obj.timetuple()
         if tuple_obj is not None:
-            last_time = time.mktime(SiteReportModel.get_latest_updated_tuple())
+            last_time = time.mktime(tuple_obj)
         if (last_time == 0) or (time.time() - last_time >= generate_interval):
             req_start = datetime.datetime.fromtimestamp(
                 time.time() - generate_interval
@@ -548,7 +601,7 @@ class SiteReportModel(models.Model):
                 total_delay = 0.0
                 succeed_num = 0
                 for report in recent_http_reports:
-                    total_delay += report['delay_std']
+                    total_delay += float(report['delay_std'])
                     if report['succeed']:
                         succeed_num += 1
                 succeed_rate = float(succeed_num) / total_num

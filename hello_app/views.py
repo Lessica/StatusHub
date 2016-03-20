@@ -221,6 +221,7 @@ def api_submit(request):
                                     obj = {
                                         "status": 'ok'
                                     }
+                                    SiteReportModel.generate_new_ping_report(host_obj, int(json_obj['start']))
                                 else:
                                     obj = {
                                         "status": 'restart',
@@ -277,7 +278,6 @@ def api_submit(request):
                                     obj = {
                                         "status": 'ok'
                                     }
-                                    # Check Last Host Report
                                     SiteReportModel.generate_new_http_report(host_obj, int(json_obj['start']))
                                 else:
                                     obj = {

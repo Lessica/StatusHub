@@ -156,7 +156,7 @@ def http_loop(host_dict, freq, flag, s_url):
         else:
             uri += 'http://'
         uri += host_dict['host'] + ':' + str(host_dict['port'])
-        print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Frequency = ' + str(freq)
+        print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Frequency = ' + str(freq) + ' | ' + 'Loop = ' + str(loop_times)
         ret_code = 0
         ret_delay = 12000
         ret_header = {}

@@ -2,16 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="fa812b15-0c1c-4d36-8cb3-ddc563807528" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dataSources.ids" afterPath="$PROJECT_DIR$/.idea/dataSources.ids" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db.sqlite3" afterPath="$PROJECT_DIR$/db.sqlite3" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dataSources.xml" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hello_app/admin.py" afterPath="$PROJECT_DIR$/hello_app/admin.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hello_app/migrations/0001_initial.py" afterPath="$PROJECT_DIR$/hello_app/migrations/0001_initial.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hello_app/models.py" afterPath="$PROJECT_DIR$/hello_app/models.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hello_app/views.py" afterPath="$PROJECT_DIR$/hello_app/views.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helloworld/settings.py" afterPath="$PROJECT_DIR$/helloworld/settings.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reports/remote.py" afterPath="$PROJECT_DIR$/reports/remote.py" />
     </list>
     <ignored path="helloworld.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -60,7 +52,7 @@
         <entry file="file://$PROJECT_DIR$/hello_app/models.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="303" column="42" selection-start-line="303" selection-start-column="37" selection-end-line="303" selection-end-column="42" />
+              <caret line="529" column="29" selection-start-line="529" selection-start-column="29" selection-end-line="529" selection-end-column="29" />
               <folding>
                 <element signature="e#15#54#0" expanded="true" />
               </folding>
@@ -68,21 +60,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="admin.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="admin.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hello_app/admin.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.42480212">
+            <state vertical-scroll-proportion="0.0">
               <caret line="19" column="28" selection-start-line="19" selection-start-column="28" selection-end-line="19" selection-end-column="28" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="views.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/hello_app/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="213" column="78" selection-start-line="213" selection-start-column="78" selection-end-line="213" selection-end-column="78" />
+            <state vertical-scroll-proportion="0.5343008">
+              <caret line="220" column="43" selection-start-line="220" selection-start-column="43" selection-end-line="220" selection-end-column="43" />
               <folding>
                 <element signature="e#15#30#0" expanded="true" />
               </folding>
@@ -1053,28 +1045,28 @@
     <entry file="file://$PROJECT_DIR$/hello_app/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="303" column="42" selection-start-line="303" selection-start-column="37" selection-end-line="303" selection-end-column="42" />
+          <caret line="529" column="29" selection-start-line="529" selection-start-column="29" selection-end-line="529" selection-end-column="29" />
           <folding>
             <element signature="e#15#54#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hello_app/views.py">
+    <entry file="file://$PROJECT_DIR$/hello_app/admin.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="213" column="78" selection-start-line="213" selection-start-column="78" selection-end-line="213" selection-end-column="78" />
-          <folding>
-            <element signature="e#15#30#0" expanded="true" />
-          </folding>
+          <caret line="19" column="28" selection-start-line="19" selection-start-column="28" selection-end-line="19" selection-end-column="28" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hello_app/admin.py">
+    <entry file="file://$PROJECT_DIR$/hello_app/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.42480212">
-          <caret line="19" column="28" selection-start-line="19" selection-start-column="28" selection-end-line="19" selection-end-column="28" />
-          <folding />
+        <state vertical-scroll-proportion="0.5343008">
+          <caret line="220" column="43" selection-start-line="220" selection-start-column="43" selection-end-line="220" selection-end-column="43" />
+          <folding>
+            <element signature="e#15#30#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
