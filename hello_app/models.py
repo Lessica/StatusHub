@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import datetime
 import time
-import pytz
+import json
 from django.db import models
 
 # Create your models here.
@@ -199,7 +199,7 @@ class CommonHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    checked_count = models.IntegerField(default=0)
+    frequency = models.IntegerField(default=900)
     random_id = models.CharField(max_length=6, default='')
 
     @staticmethod
@@ -228,8 +228,6 @@ class CommonOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    sent_count = models.IntegerField(default=0)
-    frequency = models.IntegerField(default=900)
     secret = models.CharField(max_length=32, default='')
 
     @staticmethod
@@ -257,8 +255,8 @@ class PingHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    checked_count = models.IntegerField(default=0)
     random_id = models.CharField(max_length=6, default='')
+    frequency = models.IntegerField(default=900)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -267,7 +265,8 @@ class PingHostModel(models.Model):
         for ping_host in ping_hosts:
             arr.append({
                 'type': 'ping',
-                'host': ping_host.host
+                'host': ping_host.host,
+                'frequency': ping_host.frequency
             })
         return arr
 
@@ -289,8 +288,6 @@ class PingOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    sent_count = models.IntegerField(default=0)
-    frequency = models.IntegerField(default=900)
     secret = models.CharField(max_length=32, default='')
 
     @staticmethod
@@ -301,8 +298,7 @@ class PingOriginModel(models.Model):
             arr.append({
                 'type': 'ping',
                 'host': ping_origin.origin,
-                'power': ping_origin.power,
-                'frequency': ping_origin.frequency,
+                'power': ping_origin.power
             })
         return arr
 
@@ -346,10 +342,10 @@ class HttpHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    checked_count = models.IntegerField(default=0)
     random_id = models.CharField(max_length=6, default='')
     secure = models.BooleanField(default=False)
     port = models.IntegerField()
+    frequency = models.IntegerField(default=900)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -360,7 +356,8 @@ class HttpHostModel(models.Model):
                 'type': 'http',
                 'host': http_host.host,
                 'port': http_host.port,
-                'secure': http_host.secure
+                'secure': http_host.secure,
+                'frequency': http_host.frequency
             })
         return arr
 
@@ -381,10 +378,10 @@ class RespHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    checked_count = models.IntegerField(default=0)
     random_id = models.CharField(max_length=6, default='')
     url = models.CharField(max_length=255)
     expected_contents = models.TextField()
+    frequency = models.IntegerField(default=900)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -393,7 +390,8 @@ class RespHostModel(models.Model):
         for resp_host in resp_hosts:
             arr.append({
                 'type': 'resp',
-                'url': resp_host.url
+                'url': resp_host.url,
+                'frequency': resp_host.frequency
             })
         return arr
 
@@ -412,8 +410,6 @@ class HttpOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    sent_count = models.IntegerField(default=0)
-    frequency = models.IntegerField(default=900)
     secret = models.CharField(max_length=32, default='')
     ua = models.CharField(
         default='',
@@ -429,7 +425,6 @@ class HttpOriginModel(models.Model):
                 'type': 'http',
                 'host': http_origin.origin,
                 'power': http_origin.power,
-                'frequency': http_origin.frequency,
                 'ua': http_origin.ua
             })
         return arr
@@ -452,8 +447,6 @@ class RespOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    sent_count = models.IntegerField(default=0)
-    frequency = models.IntegerField(default=900)
     secret = models.CharField(max_length=32, default='')
     ua = models.CharField(
         default='',
@@ -470,7 +463,6 @@ class RespOriginModel(models.Model):
                 'type': 'resp',
                 'host': resp_origin.origin,
                 'power': resp_origin.power,
-                'frequency': resp_origin.frequency,
                 'ua': resp_origin.ua
             })
         return arr
@@ -509,6 +501,170 @@ class SiteReportModel(models.Model):
     comments = models.TextField(default='No comment')
 
     @staticmethod
+    def generate_all_hosts_graph_data(start_type):
+        start = 86400
+        if start_type == 1:
+            start = 604800
+        elif start_type == 2:
+            start = 2592000
+        all_ping_hosts = PingHostModel.objects.filter(
+            enabled=True
+        ).all()
+        ping_arr = []
+        for ping_host in all_ping_hosts:
+            ping_arr += SiteReportModel.get_ping_host_graph_data(ping_host, start)
+        all_http_hosts = HttpHostModel.objects.filter(
+            enabled=True
+        ).all()
+        http_arr = []
+        for http_host in all_http_hosts:
+            http_arr += SiteReportModel.get_http_host_graph_data(http_host, start)
+        arr = ping_arr + http_arr
+        return arr
+
+    @staticmethod
+    def get_ping_host_graph_data(host_obj, start):
+        host_status_arr = []
+        ping_success_dict = SiteReportModel.get_ping_success_graph_data(host_obj, start)
+        if ping_success_dict is not None:
+            host_status_arr.append(ping_success_dict)
+        ping_delay_dict = SiteReportModel.get_ping_delay_graph_data(host_obj, start)
+        if ping_delay_dict is not None:
+            host_status_arr.append(ping_delay_dict)
+        return host_status_arr
+
+    @staticmethod
+    def get_http_host_graph_data(host_obj, start):
+        host_status_arr = []
+        http_success_dict = SiteReportModel.get_http_success_graph_data(host_obj, start)
+        if http_success_dict is not None:
+            host_status_arr.append(http_success_dict)
+        http_delay_dict = SiteReportModel.get_http_delay_graph_data(host_obj, start)
+        if http_delay_dict is not None:
+            host_status_arr.append(http_delay_dict)
+        return host_status_arr
+
+    @staticmethod
+    def get_ping_success_graph_data(host_obj, start):
+        start_at = datetime.datetime.fromtimestamp(start)
+        end_at = datetime.datetime.fromtimestamp(time.time())
+        range_ping_success_report = PingReportModel.objects.filter(
+            host=host_obj,
+            type=1,
+            created_at__range=(start_at, end_at)
+        ).values('created_at', 'value').order_by('id')
+        report_nums = len(range_ping_success_report)
+        if report_nums == 0:
+            return None
+        data = []
+        total_rate = 0.0
+        for report in range_ping_success_report:
+            total_rate += report['value']
+            data.append([time.mktime(report['created_at'].timetuple()), float(report['value']) * 100])
+        avg_rate = float(total_rate) / report_nums
+        if len(data) == 0:
+            return None
+        last_created_at = data[-1][0]
+        graph_item = {
+            'title': host_obj.name + ' 线路可用性',
+            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(last_created_at)),
+            'value': str('%.2f' % (avg_rate * 100)) + '%',
+            'data_string': json.dumps(data),
+            'unit': '%'
+        }
+        return graph_item
+
+    @staticmethod
+    def get_ping_delay_graph_data(host_obj, start):
+        start_at = datetime.datetime.fromtimestamp(start)
+        end_at = datetime.datetime.fromtimestamp(time.time())
+        range_ping_delay_report = PingReportModel.objects.filter(
+            host=host_obj,
+            type=2,
+            created_at__range=(start_at, end_at)
+        ).values('created_at', 'value').order_by('id')
+        report_nums = len(range_ping_delay_report)
+        if report_nums == 0:
+            return None
+        data = []
+        total_delay = 0.0
+        for report in range_ping_delay_report:
+            total_delay += report['value']
+            data.append([time.mktime(report['created_at'].timetuple()), float(report['value'])])
+        avg_delay = float(total_delay) / report_nums
+        if len(data) == 0:
+            return None
+        last_created_at = data[-1][0]
+        graph_item = {
+            'title': host_obj.name + ' 线路延迟',
+            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(last_created_at)),
+            'value': str('%.2f' % avg_delay) + 'ms',
+            'data_string': json.dumps(data),
+            'unit': 'ms'
+        }
+        return graph_item
+
+    @staticmethod
+    def get_http_success_graph_data(host_obj, start):
+        start_at = datetime.datetime.fromtimestamp(start)
+        end_at = datetime.datetime.fromtimestamp(time.time())
+        range_http_success_report = HttpReportModel.objects.filter(
+            host=host_obj,
+            type=3,
+            created_at__range=(start_at, end_at)
+        ).values('created_at', 'value').order_by('id')
+        report_nums = len(range_http_success_report)
+        if report_nums == 0:
+            return None
+        data = []
+        total_rate = 0.0
+        for report in range_http_success_report:
+            total_rate += report['value']
+            data.append([time.mktime(report['created_at'].timetuple()), float(report['value']) * 100])
+        avg_rate = float(total_rate) / report_nums
+        if len(data) == 0:
+            return None
+        last_created_at = data[-1][0]
+        graph_item = {
+            'title': host_obj.name + ' 有效 Web 响应率',
+            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(last_created_at)),
+            'value': str('%.2f' % (avg_rate * 100)) + '%',
+            'data_string': json.dumps(data),
+            'unit': '%'
+        }
+        return graph_item
+
+    @staticmethod
+    def get_http_delay_graph_data(host_obj, start):
+        start_at = datetime.datetime.fromtimestamp(start)
+        end_at = datetime.datetime.fromtimestamp(time.time())
+        range_http_delay_report = HttpReportModel.objects.filter(
+            host=host_obj,
+            type=4,
+            created_at__range=(start_at, end_at)
+        ).values('created_at', 'value').order_by('id')
+        report_nums = len(range_http_delay_report)
+        if report_nums == 0:
+            return None
+        data = []
+        total_delay = 0.0
+        for report in range_http_delay_report:
+            total_delay += report['value']
+            data.append([time.mktime(report['created_at'].timetuple()), float(report['value'])])
+        avg_delay = float(total_delay) / report_nums
+        if len(data) == 0:
+            return None
+        last_created_at = data[-1][0]
+        graph_item = {
+            'title': host_obj.name + ' 有效 Web 响应时间',
+            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(last_created_at)),
+            'value': str('%.2f' % avg_delay) + 'ms',
+            'data_string': json.dumps(data),
+            'unit': 'ms'
+        }
+        return graph_item
+
+    @staticmethod
     def get_latest_updated_tuple():
         obj = SiteReportModel.objects.order_by('-id')[:1]
         if not obj:
@@ -521,7 +677,15 @@ class SiteReportModel(models.Model):
         return SiteMessageModel.get_cst_time_by_value(SiteReportModel.get_latest_updated_tuple())
 
     @staticmethod
-    def generate_new_daliy_message():
+    def generate_new_daily_message():
+        # Delete Old Records
+        now = datetime.datetime.fromtimestamp(time.time() - 7776000)
+        PingDataModel.objects.filter(
+            timestamp__lte=now
+        ).delete()
+        HttpDataModel.objects.filter(
+            timestamp__lte=now
+        ).delete()
         last_time = 0
         tuple_obj = None
         generate_interval = 86400
@@ -543,7 +707,9 @@ class SiteReportModel(models.Model):
             global_minor = float(SiteConfigModel.get_config('global_minor_percentage_threshold'))
             global_good = float(SiteConfigModel.get_config('global_good_percentage_threshold'))
 
-            all_ping_hosts = PingHostModel.objects.all()
+            all_ping_hosts = PingHostModel.objects.filter(
+                enabled=True
+            ).all()
             for ping_host in all_ping_hosts:
                 today_ping_reports = PingReportModel.objects.filter(
                     host=ping_host,
@@ -568,7 +734,9 @@ class SiteReportModel(models.Model):
                 elif (avg_ping_reports_rates * 100) <= global_good and (error_level < 1):
                     error_level = 1
 
-            all_http_hosts = HttpHostModel.objects.all()
+            all_http_hosts = HttpHostModel.objects.filter(
+                enabled=True
+            ).all()
             for http_host in all_http_hosts:
                 today_http_reports = HttpReportModel.objects.filter(
                     host=http_host,
@@ -749,7 +917,6 @@ class ActiveHttpHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    checked_count = models.IntegerField(default=0)
     random_id = models.CharField(max_length=6, default='')
     secure = models.BooleanField(default=False)
     port = models.IntegerField()

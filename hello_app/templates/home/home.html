@@ -44,7 +44,25 @@
                 <p>我们提供了<a href="/api/">帮你玩服务可用性接口</a>以方便开发者确认这些信息.</p>
             </div>
             <div id="graph_data">
-                [% graph_data %]
+                <div class="tabs">
+                    <div class="tab {{ range_selected_today }}"><a href="/graphs/past_day">今天</a></div>
+                    <div class="tab {{ range_selected_last_week }}"><a href="/graphs/past_week">过去一周</a></div>
+                    <div class="tab {{ range_selected_last_month }}"><a href="/graphs/past_month">过去一月</a></div>
+                </div>
+                <div id="graphs">
+                    <div class="loader"><img src="/static/images/spinner.gif" /></div>
+                    {% for graph_item in graph_items %}
+                    <div class="graph">
+                        <div class="data">
+                            <h2>{{ graph_item.title }}</h2>
+                            <span class="number" title="{{ graph_item.time }}">{{ graph_item.value }}</span>
+                        </div>
+                        <div class="graph">
+                            <div class="graph-container" data-string="{{ graph_item.data_string }}" data-unit="{{ graph_item.unit }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 

@@ -15,27 +15,24 @@ import threading
 import subprocess
 global _origin, _secret, _url_json, _ping, _http, _resp, _header, _s, _obj, _debug, _count
 
-_debug = True
-_count = 5
+_debug = False
+_count = 1
 _origin = '127.0.0.1-ping-http-resp'
 _secret = 'pkR6s232wha3z274'
 _url_json = 'http://127.0.0.1:8000/api.json'
 
 _ping = {
     'enabled': False,
-    'frequency': 900,
     'subtypes': [],
     'hosts': []
 }
 _http = {
     'enabled': False,
-    'frequency': 900,
     'subtypes': [],
     'hosts': []
 }
 _resp = {
     'enabled': False,
-    'frequency': 900,
     'subtypes': [],
     'hosts': []
 }
@@ -55,9 +52,9 @@ def ping_loop(host, freq, flag, s_url):
     thread_time = time.time()
     # delay for a random seed time
     seed = random.randint(0, freq)
-    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed)
     if (_debug == False):
         time.sleep(seed)
+    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     count = 4
     lifeline = re.compile(r"(\d) packets received")
@@ -66,7 +63,7 @@ def ping_loop(host, freq, flag, s_url):
     loop_times = 0
     # main loop
     while 1:
-        print 'Thread ' + str(flag) + ' | ' + 'Ping ' + str(host) + ' | ' + 'Frequency = ' + str(freq) + ' | ' + 'Loop = ' + str(loop_times)
+        print 'Thread ' + str(flag) + ' | ' + 'Ping ' + str(host) + ' | ' + 'Loop = ' + str(loop_times)
         # ping subprocess
         pingaling = subprocess.Popen(["ping", "-q", "-c " + str(count), '-t 12', host], shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         # ping variables
@@ -134,7 +131,7 @@ def ping_loop(host, freq, flag, s_url):
         loop_times = loop_times + 1
         # wait for next request
         if (_debug == False):
-            time.sleep(freq + random.randint(-120, 120))
+            time.sleep(freq + random.randint(1, 5))
 
 
 # use urllib to get http code, instead of urllib2 or requests, for a better performance?
@@ -142,9 +139,9 @@ def http_loop(host_dict, freq, flag, s_url):
     thread_time = time.time()
     # delay for a random seed time
     seed = random.randint(0, freq)
-    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed)
     if (_debug == False):
         time.sleep(seed)
+    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     reports = []
     loop_times = 0
@@ -156,7 +153,7 @@ def http_loop(host_dict, freq, flag, s_url):
         else:
             uri += 'http://'
         uri += host_dict['host'] + ':' + str(host_dict['port'])
-        print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Frequency = ' + str(freq) + ' | ' + 'Loop = ' + str(loop_times)
+        print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Loop = ' + str(loop_times)
         ret_code = 0
         ret_delay = 12000
         ret_header = {}
@@ -213,7 +210,7 @@ def http_loop(host_dict, freq, flag, s_url):
         loop_times = loop_times + 1
         # wait for next request
         if (_debug == False):
-            time.sleep(freq + random.randint(-120, 120))
+            time.sleep(freq + random.randint(1, 5))
 
 
 def resp_loop(url, freq, flag, s_url):
@@ -239,13 +236,10 @@ def main():
         if origin['host'] == _origin:
             if origin['type'] == 'ping':
                 _ping['enabled'] = True
-                _ping['frequency'] = origin['frequency']
             if origin['type'] == 'http':
                 _http['enabled'] = True
-                _http['frequency'] = origin['frequency']
             if origin['type'] == 'resp':
                 _resp['enabled'] = True
-                _resp['frequency'] = origin['frequency']
     # get types config
     _r = _s.get(_obj['types_url'], headers=_header, timeout=10)
     if _r.status_code != 200:
@@ -267,31 +261,38 @@ def main():
     # parse hosts config
     for host in hosts:
         if _ping['enabled'] == True and host['type'] == 'ping':
-            _ping['hosts'].append(host['host'])
+            _ping['hosts'].append({
+                'host': host['host'],
+                'frequency': host['frequency']
+            })
         if _http['enabled'] == True and host['type'] == 'http':
             _http['hosts'].append({
                 'host': host['host'],
                 'port': host['port'],
                 'secure': host['secure'],
-                'ua': origin['ua']
+                'ua': origin['ua'],
+                'frequency': host['frequency']
             })
         if _resp['enabled'] == True and host['type'] == 'resp':
-            _resp['hosts'].append(host['host'])
+            _resp['hosts'].append({
+                'host': host['host'],
+                'frequency': host['frequency']
+            })
     # print enabled functions & append threads
     threads = []
     thread_count = 0
     if _ping['enabled'] == True:
-        for host in _ping['hosts']:
+        for host_dict in _ping['hosts']:
             thread_count = thread_count + 1
-            threads.append(threading.Thread(target=ping_loop, args=(host, _ping['frequency'], thread_count, _obj['submit_url'])))
+            threads.append(threading.Thread(target=ping_loop, args=(host_dict['host'], int(host_dict['frequency']), thread_count, _obj['submit_url'])))
     if _http['enabled'] == True:
         for host_dict in _http['hosts']:
             thread_count = thread_count + 1
-            threads.append(threading.Thread(target=http_loop, args=(host_dict, _http['frequency'], thread_count, _obj['submit_url'])))
+            threads.append(threading.Thread(target=http_loop, args=(host_dict, int(host_dict['frequency']), thread_count, _obj['submit_url'])))
     if _resp['enabled'] == True:
-        for url in _resp['hosts']:
+        for host_dict in _resp['hosts']:
             thread_count = thread_count + 1
-            threads.append(threading.Thread(target=resp_loop, args=(url, _resp['frequency'], thread_count, _obj['submit_url'])))
+            threads.append(threading.Thread(target=resp_loop, args=(host_dict['host'], int(host_dict['frequency']), thread_count, _obj['submit_url'])))
     # start daemon threads
     for t in threads:
         t.setDaemon(True)

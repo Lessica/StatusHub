@@ -18,12 +18,19 @@ def hello(request):
 
 
 def index(request, pattern):
-    if pattern == 'past_day':
-        pass
-    elif pattern == 'past_week':
-        pass
+    range_type = 0
+    selected_today = ''
+    selected_last_week = ''
+    selected_last_month = ''
+    if pattern == 'past_week':
+        range_type = 1
+        selected_last_week = 'selected'
     elif pattern == 'past_month':
-        pass
+        range_type = 2
+        selected_last_month = 'selected'
+    else:
+        range_type = 0
+        selected_today = 'selected'
     latest_message = SiteMessageModel.get_latest_message()
     if not latest_message:
         latest_message = {
@@ -33,10 +40,19 @@ def index(request, pattern):
     latest_updated_time = {
         'last_updated_time': datetime.datetime.now()
     }
+    graph_items = {
+        'graph_items': SiteReportModel.generate_all_hosts_graph_data(range_type),
+        'range_selected_today': selected_today,
+        'range_selected_last_week': selected_last_week,
+        'range_selected_last_month': selected_last_month
+    }
     render_data = dict(
         latest_message.items() +
-        latest_updated_time.items()
+        latest_updated_time.items() +
+        graph_items.items()
     )
+    if '_pjax' in request.GET:
+        return render(request, 'home/graph_data.html', render_data)
     return render(request, 'home/home.html', render_data)
 
 
@@ -184,7 +200,7 @@ def api_submit(request):
             "status": "shutdown",
             "message": "All servers should shutdown."
         }), content_type="application/json")
-    SiteReportModel.generate_new_daliy_message()
+    SiteReportModel.generate_new_daily_message()
     obj = {}
     if len(request.POST) != 0:
         json_text = request.POST['request']
