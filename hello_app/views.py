@@ -48,7 +48,7 @@ def api(request):
 
 
 def messages(request, patterns):
-    stamp = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+    stamp = int(time.mktime(datetime.date.today().timetuple()))
     if patterns:
         stamp = int(time.mktime(time.strptime(patterns, '%Y-%m-%d')))
     messages_group_list = {
@@ -184,6 +184,7 @@ def api_submit(request):
             "status": "shutdown",
             "message": "All servers should shutdown."
         }), content_type="application/json")
+    SiteReportModel.generate_new_daliy_message()
     obj = {}
     if len(request.POST) != 0:
         json_text = request.POST['request']

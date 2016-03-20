@@ -74,7 +74,7 @@ class CommonMessageModel(models.Model):
 class SiteMessageModel(CommonMessageModel):
     @staticmethod
     def get_latest_message_model():
-        obj = SiteMessageModel.objects.filter(type=1, enabled=True).order_by('-id')[:1]
+        obj = SiteMessageModel.objects.filter(type__in=[1,3],enabled=True).order_by('-id')[:1]
         if not obj:
             return None
         return obj[0]
@@ -519,6 +519,88 @@ class SiteReportModel(models.Model):
     @staticmethod
     def get_latest_updated_time():
         return SiteMessageModel.get_cst_time_by_value(SiteReportModel.get_latest_updated_tuple())
+
+    @staticmethod
+    def generate_new_daliy_message():
+        last_time = 0
+        tuple_obj = None
+        generate_interval = 86400
+        last_obj = SiteMessageModel.objects.filter(
+            type=3
+        ).order_by('-id')[:1]
+        if last_obj:
+            t_obj = last_obj[0].created_at
+            tuple_obj = t_obj.timetuple()
+        if tuple_obj is not None:
+            last_time = time.mktime(tuple_obj)
+        if (last_time == 0) or (time.time() - last_time >= generate_interval):
+            req_start = datetime.datetime.fromtimestamp(
+                time.time() - generate_interval
+            )
+            error_level = 0
+            final_message = ''
+            global_major = float(SiteConfigModel.get_config('global_major_percentage_threshold'))
+            global_minor = float(SiteConfigModel.get_config('global_minor_percentage_threshold'))
+            global_good = float(SiteConfigModel.get_config('global_good_percentage_threshold'))
+
+            all_ping_hosts = PingHostModel.objects.all()
+            for ping_host in all_ping_hosts:
+                today_ping_reports = PingReportModel.objects.filter(
+                    host=ping_host,
+                    created_at__gte=req_start,
+                    type=1
+                ).values('value')
+                avg_ping_reports_rates = 0.0
+                total_ping_reports_nums = len(today_ping_reports)
+                if total_ping_reports_nums != 0:
+                    total_ping_reports_rates = 0.0
+                    for ping_report in today_ping_reports:
+                        total_ping_reports_rates += float(ping_report['value'])
+                    avg_ping_reports_rates = float(total_ping_reports_rates) / total_ping_reports_nums
+                if avg_ping_reports_rates == 0.0:
+                    break
+                if (avg_ping_reports_rates * 100) <= global_major and (error_level < 3):
+                    error_level = 3
+                    final_message += ping_host.name + ' 网络线路发生故障'
+                elif (avg_ping_reports_rates * 100) <= global_minor and (error_level < 2):
+                    error_level = 2
+                    final_message += ping_host.name + ' 网络线路出现异常'
+                elif (avg_ping_reports_rates * 100) <= global_good and (error_level < 1):
+                    error_level = 1
+
+            all_http_hosts = HttpHostModel.objects.all()
+            for http_host in all_http_hosts:
+                today_http_reports = HttpReportModel.objects.filter(
+                    host=http_host,
+                    created_at__gte=req_start,
+                    type=3
+                ).values('value')
+                avg_http_reports_rates = 0.0
+                total_http_reports_nums = len(today_http_reports)
+                if total_http_reports_nums != 0:
+                    total_http_reports_rates = 0.0
+                    for http_report in today_http_reports:
+                        total_http_reports_rates += float(http_report['value'])
+                    avg_http_reports_rates = float(total_http_reports_rates) / total_http_reports_nums
+                if avg_http_reports_rates == 0.0:
+                    break
+                if (avg_http_reports_rates * 100) <= global_major and (error_level < 3):
+                    error_level = 3
+                    final_message += ping_host.name + ' 服务器发生故障'
+                elif (avg_http_reports_rates * 100) <= global_minor and (error_level < 2):
+                    error_level = 2
+                    final_message += ping_host.name + ' 服务器出现异常'
+                elif (avg_http_reports_rates * 100) <= global_good and (error_level < 1):
+                    error_level = 1
+
+            if error_level == 0:
+                final_message = SiteConfigModel.get_config('default_site_message_content')
+
+            new_auto_message = SiteMessageModel()
+            new_auto_message.type = 3
+            new_auto_message.status = error_level + 1
+            new_auto_message.content = final_message
+            new_auto_message.save()
 
     @staticmethod
     def generate_new_ping_report(host_obj, start_at):
