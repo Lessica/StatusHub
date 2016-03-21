@@ -11,7 +11,7 @@ from django.db import models
 class SiteConfigCategoryModel(models.Model):
     id = models.IntegerField(primary_key=True, editable=False)
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
@@ -74,7 +74,10 @@ class CommonMessageModel(models.Model):
 class SiteMessageModel(CommonMessageModel):
     @staticmethod
     def get_latest_message_model():
-        obj = SiteMessageModel.objects.filter(type__in=[1,3],enabled=True).order_by('-id')[:1]
+        obj = SiteMessageModel.objects.filter(
+            type__in=[1, 3],
+            enabled=True
+        ).order_by('-id')[:1]
         if not obj:
             return None
         return obj[0]
@@ -199,8 +202,10 @@ class CommonHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     frequency = models.IntegerField(default=900)
     random_id = models.CharField(max_length=6, default='')
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_all_hosts_arr():
@@ -228,7 +233,9 @@ class CommonOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     secret = models.CharField(max_length=32, default='')
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_all_origins_arr():
@@ -255,8 +262,10 @@ class PingHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     random_id = models.CharField(max_length=6, default='')
     frequency = models.IntegerField(default=900)
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -288,7 +297,9 @@ class PingOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     secret = models.CharField(max_length=32, default='')
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_origins_arr():
@@ -342,10 +353,12 @@ class HttpHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     random_id = models.CharField(max_length=6, default='')
     secure = models.BooleanField(default=False)
     port = models.IntegerField()
     frequency = models.IntegerField(default=900)
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -378,10 +391,24 @@ class RespHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     random_id = models.CharField(max_length=6, default='')
     url = models.CharField(max_length=255)
-    expected_contents = models.TextField()
+    method = models.IntegerField(default=0, choices=(
+        (0, 'HEAD'),
+        (1, 'GET'),
+        (2, 'POST'),
+    ))
+    headers = models.TextField(blank=True)
+    body = models.TextField(blank=True)
+    match_method = models.IntegerField(default=0, choices=(
+        (0, 'Simple'),
+        (1, 'Regexp'),
+    ))
+    expected_headers = models.TextField(blank=True)
+    expected_body = models.TextField(blank=True)
     frequency = models.IntegerField(default=900)
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_hosts_arr():
@@ -391,6 +418,11 @@ class RespHostModel(models.Model):
             arr.append({
                 'type': 'resp',
                 'url': resp_host.url,
+                'method': resp_host.method,
+                'headers': resp_host.headers,
+                'body': resp_host.body,
+                'expected_method': resp_host.expected_method,
+                'expected_contents': resp_host.expected_contents,
                 'frequency': resp_host.frequency
             })
         return arr
@@ -410,11 +442,13 @@ class HttpOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     secret = models.CharField(max_length=32, default='')
     ua = models.CharField(
         default='',
         max_length=512
     )
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_origins_arr():
@@ -447,12 +481,10 @@ class RespOriginModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     secret = models.CharField(max_length=32, default='')
-    ua = models.CharField(
-        default='',
-        max_length=512
-    )
     bandwidth = models.FloatField()
+    comments = models.TextField(blank=True)
 
     @staticmethod
     def get_brief_origins_arr():
@@ -795,7 +827,7 @@ class SiteReportModel(models.Model):
             succeed_rate = 0.0
             delay_avg = 9999.0
             if total_num != 0:
-                total_times= 0
+                total_times = 0
                 succeed_times = 0
                 total_delay = 0.0
                 for report in recent_ping_reports:
@@ -917,6 +949,7 @@ class ActiveHttpHostModel(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField()
     random_id = models.CharField(max_length=6, default='')
     secure = models.BooleanField(default=False)
     port = models.IntegerField()
@@ -925,6 +958,7 @@ class ActiveHttpHostModel(models.Model):
         (0, 'exception'),
     ))
     package_count = models.IntegerField(default=0)
+    comments = models.TextField(blank=True)
 
 
 class ActiveExceptionModel(models.Model):
@@ -950,10 +984,9 @@ class RespDataModel(models.Model):
     host = models.ForeignKey(RespHostModel)
     succeed = models.BooleanField(default=False)
     code = models.IntegerField(default=200)
-    header = models.TextField()
+    response_header = models.TextField()
+    response_body = models.TextField()
     delay_std = models.FloatField()
     timestamp = models.DateTimeField(auto_now=True)
     origin = models.ForeignKey(RespOriginModel)
     passed = models.BooleanField(default=False)
-    size = models.IntegerField(default=0)
-    contents = models.TextField()
