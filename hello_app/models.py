@@ -129,7 +129,7 @@ class SiteMessageModel(CommonMessageModel):
 
     @staticmethod
     def has_page_next_than_time(req_time):
-        req_pos = datetime.datetime.fromtimestamp(req_time)
+        req_pos = datetime.datetime.fromtimestamp(req_time + 86400)
         obj = SiteMessageModel.objects.filter(created_at__gte=req_pos)[:1]
         if not obj:
             return None
@@ -138,7 +138,7 @@ class SiteMessageModel(CommonMessageModel):
 
     @staticmethod
     def get_weekly_messages_list(req_time):
-        req_start = datetime.datetime.fromtimestamp(req_time)
+        req_start = datetime.datetime.fromtimestamp(req_time + 86400)
         req_end = datetime.datetime.fromtimestamp(req_time - 604800)
         weekly_messages_list = SiteMessageModel.objects.filter(
             enabled=True,
