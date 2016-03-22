@@ -241,10 +241,10 @@ def main():
     origins = json.loads(result.text)
     for origin in origins:
         if origin['host'] == g_origin:
-            g_ua = origin['ua']
             if origin['type'] == 'ping':
                 g_ping['enabled'] = True
             if origin['type'] == 'http':
+                g_ua = origin['ua']
                 g_http['enabled'] = True
             if origin['type'] == 'resp':
                 g_resp['enabled'] = True
