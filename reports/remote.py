@@ -18,8 +18,8 @@ global _origin, _secret, _url_json, _ping, _http, _resp, _header, _s, _obj, _deb
 _debug = False
 _count = 1
 _origin = '127.0.0.1-ping-http-resp'
-_secret = 'pkR6s232wha3z274'
-_url_json = 'http://127.0.0.1:8000/api.json'
+_secret = 'binnacle-sluice-calling'
+_url_json = 'https://status.touchsprite.com/api.json'
 
 _ping = {
     'enabled': False,

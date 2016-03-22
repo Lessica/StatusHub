@@ -824,8 +824,6 @@ class SiteReportModel(models.Model):
                 timestamp__gte=req_start
             ).values('transmitted_times', 'received_times', 'delay_avg').order_by('-id')
             total_num = len(recent_ping_reports)
-            succeed_rate = 0.0
-            delay_avg = 9999.0
             if total_num != 0:
                 total_times = 0
                 succeed_times = 0
@@ -836,7 +834,8 @@ class SiteReportModel(models.Model):
                     total_delay += float(report['delay_avg'])
                 succeed_rate = float(succeed_times) / total_times
                 delay_avg = float(total_delay) / total_num
-
+            else:
+                return
             new_report = PingReportModel()
             new_report.name = host_obj.name
             new_report.host = host_obj
@@ -876,8 +875,6 @@ class SiteReportModel(models.Model):
                 host=host_obj,
                 timestamp__gte=req_start
             ).values('succeed', 'delay_std').order_by('-id')
-            succeed_rate = 0.0
-            delay_avg = 9999.0
             total_num = len(recent_http_reports)
             if total_num != 0:
                 total_delay = 0.0
@@ -888,7 +885,8 @@ class SiteReportModel(models.Model):
                         succeed_num += 1
                 succeed_rate = float(succeed_num) / total_num
                 delay_avg = float(total_delay) / total_num
-
+            else:
+                return
             new_report = HttpReportModel()
             new_report.name = host_obj.name
             new_report.host = host_obj
