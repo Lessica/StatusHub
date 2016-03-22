@@ -145,7 +145,7 @@ class SiteMessageModel(CommonMessageModel):
             created_at__range=(req_end, req_start)
         ).extra(select={
             'date': "date(`created_at`)"
-        }).values('type', 'status', 'content', 'date', 'created_at').order_by('-id')
+        }).values('type', 'status', 'content', 'date', 'created_at').order_by('id')
         if not weekly_messages_list:
             return None
         new_messages_list = {}
