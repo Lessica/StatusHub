@@ -13,7 +13,7 @@ print colored('Jiangsu Telecom Service Speed Up Script 1.0', 'yellow')
 print colored('Author: i_82 <i.82@me.com>', 'yellow')
 print colored('> Get PHPSESSID...', 'blue')
 s = requests.session()
-headers={
+headers = {
     'Accept': '*/*',
     'Accept-Encoding': 'gzip, deflate, sdch',
     'Accept-Language': 'zh-CN,zh;q=0.8',
@@ -25,12 +25,12 @@ headers={
     'X-Requested-With': 'XMLHttpRequest',
 }
 r = s.get("http://www.114yeah.com/", headers=headers)
-if (r.status_code != 200):
+if r.status_code != 200:
     r.raise_for_status()
 print colored('> PHPSESSID: ' + s.cookies['PHPSESSID'], 'green')
 print colored('> Get Encrypted Token...', 'blue')
 r = s.post('http://www.114yeah.com/Index/encrypchar.html', data={}, headers=headers)
-if (r.status_code != 200):
+if r.status_code != 200:
     r.raise_for_status()
 j = json.loads(r.text)
 token = j
@@ -39,7 +39,7 @@ print colored('> Signing...', 'blue')
 r = s.get('http://61.160.183.220/jsts/ebit/sign', params={
     'k': j
 }, headers=headers)
-if (r.status_code != 200):
+if r.status_code != 200:
     r.raise_for_status()
 j = json.loads(r.text)
 print colored('> Sign: ' + json.dumps(j), 'green')
@@ -47,7 +47,7 @@ print colored('> Recording...', 'blue')
 r = s.post('http://www.114yeah.com/Index/record.html', data={
     'interuser': j['un']
 })
-if (r.status_code != 200):
+if r.status_code != 200:
     r.raise_for_status()
 print colored('> Record Result: ' + r.text, 'green')
 headers['Referer'] = 'http://www.114yeah.com/Index/speedup.html'
@@ -62,11 +62,11 @@ print colored('> Speeding Up...', 'blue')
 r = s.get('http://61.160.183.220/jsts/ebit/start', params={
     'k': token
 }, headers=headers)
-if (r.status_code != 200):
+if r.status_code != 200:
     r.raise_for_status()
 j = json.loads(r.text)
 print colored('> Result: ' + json.dumps(j), 'green')
-if (j['code'] == '-21523'):
+if j['code'] == '-21523':
     print colored('> Already speeded up.', 'red')
 print colored('# Account: ' + j['un'], 'yellow')
 print colored('# Base bandwidth: ' + str(j['base']) + ' kb/s', 'yellow')
