@@ -66,14 +66,13 @@ def api(request):
     return render(request, 'api/api.html', latest_updated_time)
 
 
-@cache_page(900)
 def messages(request, patterns):
     stamp = int(time.mktime(datetime.date.today().timetuple()))
     if patterns:
         stamp = int(time.mktime(time.strptime(patterns, '%Y-%m-%d')))
     messages_group_list = {
         'messages_group_list': SiteMessageModel.get_weekly_messages_list(stamp),
-        'page_prev_arg': SiteMessageModel.has_page_prev_than_time(stamp - 604800),
+        'page_prev_arg': SiteMessageModel.has_page_prev_than_time(stamp - 518400),
         'page_next_arg': SiteMessageModel.has_page_next_than_time(stamp)
     }
     latest_message = SiteMessageModel.get_latest_message()

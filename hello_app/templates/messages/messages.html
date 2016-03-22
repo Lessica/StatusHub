@@ -27,12 +27,12 @@
                 <a href="/" class="back">&laquo; 仪表盘</a>
                 <h1>状态信息</h1>
             </div>
-            {% for messages_date, messages in messages_group_list.items %}
-            <div class="message_group" id="{{ messages_date }}">
-                <h3>{{ messages.display }}</h3>
-                {% for message in messages.list %}
-                <div class="message {{ message.type }} {{ message.status }}" data-status="{{ message.status }}">
-                    <time class="time" datetime="{{ message.created_at | date:"Y-m-d\TH:i:s" }}">{{ message.created_at | date:"H:i" }} CST</time> <span class="title">{{ message.content }}</span>
+            {% for message in messages_group_list %}
+            <div class="message_group" id="{{ message.date }}">
+                <h3>{{ message.display }}</h3>
+                {% for msg in message.list %}
+                <div class="message {{ msg.type }} {{ msg.status }}" data-status="{{ msg.status }}">
+                    <time class="time" datetime="{{ msg.created_at | date:"Y-m-d\TH:i:s" }}">{{ msg.created_at | date:"H:i" }} UTC</time> <span class="title">{{ msg.content }}</span>
                 </div>
                 {% endfor %}
             </div>

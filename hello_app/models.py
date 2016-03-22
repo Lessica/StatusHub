@@ -67,8 +67,8 @@ class CommonMessageModel(models.Model):
     content = models.TextField(default='')
     power = models.IntegerField(default=0)
     enabled = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField()
+    modified_at = models.DateTimeField()
 
 
 class SiteMessageModel(CommonMessageModel):
@@ -125,7 +125,7 @@ class SiteMessageModel(CommonMessageModel):
         if not obj:
             return None
         else:
-            return (req_pos + datetime.timedelta(-7)).strftime('%Y-%m-%d')
+            return (req_pos + datetime.timedelta(-1)).strftime('%Y-%m-%d')
 
     @staticmethod
     def has_page_next_than_time(req_time):
@@ -139,33 +139,35 @@ class SiteMessageModel(CommonMessageModel):
     @staticmethod
     def get_weekly_messages_list(req_time):
         req_start = datetime.datetime.fromtimestamp(req_time + 86400)
-        req_end = datetime.datetime.fromtimestamp(req_time - 604800)
+        req_end = datetime.datetime.fromtimestamp(req_time - 518400)
         weekly_messages_list = SiteMessageModel.objects.filter(
             enabled=True,
             created_at__range=(req_end, req_start)
         ).extra(select={
             'date': "date(`created_at`)"
-        }).values('type', 'status', 'content', 'date', 'created_at').order_by('id')
+        }).values('type', 'status', 'content', 'date', 'created_at').order_by('-id')
         if not weekly_messages_list:
             return None
         new_messages_list = {}
         for weekly_message in weekly_messages_list:
-            if weekly_message['type'] == 3:
-                weekly_message['type'] = 'auto-message'
-            else:
-                weekly_message['type'] = ''
+            weekly_message['type'] = ''
             weekly_message['status'] = SiteMessageModel.get_status_style_class_by_value(weekly_message['status'])
             if weekly_message['date']:
                 if weekly_message['date'] not in new_messages_list:
                     tmp = datetime.datetime.strptime(weekly_message['date'], "%Y-%m-%d")
                     new_messages_list[weekly_message['date']] = {
+                        'date': weekly_message['date'],
                         'display': datetime.datetime.strftime(datetime.date(tmp.year, tmp.month, tmp.day), "%B %d, %Y"),
                         'list': []
                     }
                 new_messages_list[weekly_message['date']]['list'].append(weekly_message)
         if not new_messages_list:
             return None
-        return new_messages_list
+        new_messages_arr = []
+        for key in new_messages_list:
+            new_messages_arr.append(new_messages_list[key])
+        new_messages_arr.sort(reverse=True)
+        return new_messages_arr
 
     @staticmethod
     def get_status_style_class_by_value(v):
