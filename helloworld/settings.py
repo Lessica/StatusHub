@@ -26,7 +26,7 @@ SECRET_KEY = '%zhfy^f#o$bsb*i2o65b6%v3a&^p25*9(wf=hefcg)%wl@j8s#'
 DEBUG = False
 
 ALLOWED_HOSTS = [
-       'status.touchsprite.com'
+    'status.touchsprite.com'
 ]
 
 

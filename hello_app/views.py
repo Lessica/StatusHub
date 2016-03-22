@@ -73,8 +73,8 @@ def messages(request, patterns):
         stamp = int(time.mktime(time.strptime(patterns, '%Y-%m-%d')))
     messages_group_list = {
         'messages_group_list': SiteMessageModel.get_weekly_messages_list(stamp),
-        'page_prev_arg': SiteMessageModel.has_page_prev_than_time(stamp),
-        'page_next_arg': SiteMessageModel.has_page_next_than_time(stamp + 604800)
+        'page_prev_arg': SiteMessageModel.has_page_prev_than_time(stamp - 604800),
+        'page_next_arg': SiteMessageModel.has_page_next_than_time(stamp)
     }
     latest_message = SiteMessageModel.get_latest_message()
     if not latest_message:

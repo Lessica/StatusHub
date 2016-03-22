@@ -134,15 +134,15 @@ class SiteMessageModel(CommonMessageModel):
         if not obj:
             return None
         else:
-            return req_pos.strftime('%Y-%m-%d')
+            return (req_pos + datetime.timedelta(7)).strftime('%Y-%m-%d')
 
     @staticmethod
     def get_weekly_messages_list(req_time):
         req_start = datetime.datetime.fromtimestamp(req_time)
-        req_end = datetime.datetime.fromtimestamp(req_time + 604800)
+        req_end = datetime.datetime.fromtimestamp(req_time - 604800)
         weekly_messages_list = SiteMessageModel.objects.filter(
             enabled=True,
-            created_at__range=(req_start, req_end)
+            created_at__range=(req_end, req_start)
         ).extra(select={
             'date': "date(`created_at`)"
         }).values('type', 'status', 'content', 'date', 'created_at').order_by('-id')
