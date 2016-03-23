@@ -14,8 +14,8 @@ import requests
 import threading
 import subprocess
 
-g_debug = False
-g_count = 5
+g_debug = True
+g_count = 1
 g_origin = '127.0.0.1-ping-http'
 g_secret = 'pappi-blockade-suspend'
 g_session = requests.session()
@@ -35,10 +35,10 @@ def ping_loop(host, freq, flag, s_url):
     seed = random.randint(0, freq)
     if not g_debug:
         time.sleep(seed)
-    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
+    print '(Ping) Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     count = 4
-    lifeline = re.compile(r"(\d) packets received")
+    lifeline = re.compile(r"(\d) received")
     delay_line = re.compile(r"= (.+) ms")
     reports = []
     loop_times = 0
@@ -47,7 +47,7 @@ def ping_loop(host, freq, flag, s_url):
         print 'Thread ' + str(flag) + ' | ' + 'Ping ' + str(host) + ' | ' + 'Loop = ' + str(loop_times)
         # ping subprocess
         ping_ling = subprocess.Popen(
-            ["ping", "-q", "-c " + str(count), '-t 12', host],
+            ["ping", "-q", "-c " + str(count), host],
             shell=False,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE
@@ -101,19 +101,19 @@ def ping_loop(host, freq, flag, s_url):
             }
             result = g_session.post(s_url, data={'request': json.dumps(request_data)})
             if result.status_code != 200:
-                print 'Thread ' + str(flag) + ' | ' + 'Report Failed!'
+                print '(Ping) Thread ' + str(flag) + ' | ' + 'Report Failed!'
             else:
                 report_ret = json.loads(result.text)
                 if report_ret['status'] == 'ok':
-                    print 'Thread ' + str(flag) + ' | ' + 'Report Succeed: ' + str(result.text)
+                    print '(Ping) Thread ' + str(flag) + ' | ' + 'Report Succeed: ' + str(result.text)
                     reports = []
                 elif report_ret['status'] == 'error':
-                    print 'Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(result.text)
+                    print '(Ping) Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(result.text)
                 elif report_ret['status'] == 'restart':
-                    print 'Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(result.text)
+                    print '(Ping) Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(result.text)
                     restart_program()
                 elif report_ret['status'] == 'shutdown':
-                    print 'Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(result.text)
+                    print '(Ping) Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(result.text)
                     os._exit(0)
         loop_times += 1
         # wait for next request
@@ -129,7 +129,7 @@ def http_loop(host_dict, freq, flag, s_url):
     seed = random.randint(0, freq)
     if not g_debug:
         time.sleep(seed)
-    print 'Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
+    print '(Http) Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     reports = []
     loop_times = 0
@@ -141,7 +141,7 @@ def http_loop(host_dict, freq, flag, s_url):
         else:
             uri += 'http://'
         uri += host_dict['host'] + ':' + str(host_dict['port'])
-        print 'Thread ' + str(flag) + ' | ' + 'Try: ' + str(uri) + ' | ' + 'Loop = ' + str(loop_times)
+        print 'Thread ' + str(flag) + ' | ' + 'GET ' + str(uri) + ' | ' + 'Loop = ' + str(loop_times)
         ret_delay = 12000
         ret_header = {}
         micro_start = datetime.datetime.utcnow()
@@ -180,19 +180,19 @@ def http_loop(host_dict, freq, flag, s_url):
             }
             result = g_session.post(s_url, data={'request': json.dumps(request_data)})
             if result.status_code != 200:
-                print 'Thread ' + str(flag) + ' | ' + 'Report Failed!'
+                print '(Http) Thread ' + str(flag) + ' | ' + 'Report Failed!'
             else:
                 report_ret = json.loads(result.text)
                 if report_ret['status'] == 'ok':
-                    print 'Thread ' + str(flag) + ' | ' + 'Report Succeed: ' + str(result.text)
+                    print '(Http) Thread ' + str(flag) + ' | ' + 'Report Succeed: ' + str(result.text)
                     reports = []
                 elif report_ret['status'] == 'error':
-                    print 'Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(result.text)
+                    print '(Http) Thread ' + str(flag) + ' | ' + 'Report Failed: ' + str(result.text)
                 elif report_ret['status'] == 'restart':
-                    print 'Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(result.text)
+                    print '(Http) Thread ' + str(flag) + ' | ' + 'Restarted By Remote: ' + str(result.text)
                     restart_program()
                 elif report_ret['status'] == 'shutdown':
-                    print 'Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(result.text)
+                    print '(Http) Thread ' + str(flag) + ' | ' + 'Terminated By Remote: ' + str(result.text)
                     os._exit(0)
         loop_times += 1
         # wait for next request
@@ -200,8 +200,32 @@ def http_loop(host_dict, freq, flag, s_url):
             time.sleep(freq + random.randint(1, 5))
 
 
-def resp_loop():
-    pass
+def resp_loop(host_dict, freq, flag, s_url):
+    global g_debug, g_count, g_origin, g_secret, g_session
+    thread_time = time.time()
+    # delay for a random seed time
+    seed = random.randint(0, freq)
+    if not g_debug:
+        time.sleep(seed)
+    print '(Resp) Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
+    # init variables
+    reports = []
+    loop_times = 0
+    # main loop
+    while 1:
+        uri = host_dict['url']
+        method_value = int(host_dict['method'])
+        method_str = ''
+        if method_value == 0:
+            method_str = 'HEAD'
+        elif method_value == 1:
+            method_str = 'GET'
+        elif method_value == 2:
+            method_str = 'POST'
+        print 'Thread ' + str(flag) + ' | ' + method_str + ' ' + str(uri) + ' | ' + 'Loop = ' + str(loop_times)
+        ret_delay = 12000
+        ret_header = {}
+        micro_start = datetime.datetime.utcnow()
 
 
 def main():
@@ -269,10 +293,7 @@ def main():
     # parse hosts config
     for host in hosts:
         if g_ping['enabled'] == True and host['type'] == 'ping':
-            g_ping['hosts'].append({
-                'host': host['host'],
-                'frequency': host['frequency']
-            })
+            g_ping['hosts'].append(host)
         if g_http['enabled'] == True and host['type'] == 'http':
             g_http['hosts'].append({
                 'host': host['host'],
@@ -282,10 +303,7 @@ def main():
                 'frequency': host['frequency']
             })
         if g_resp['enabled'] == True and host['type'] == 'resp':
-            g_resp['hosts'].append({
-                'host': host['host'],
-                'frequency': host['frequency']
-            })
+            g_resp['hosts'].append(host)
     # print enabled functions & append threads
     threads = []
     thread_count = 0
@@ -305,7 +323,7 @@ def main():
         for host_dict in g_resp['hosts']:
             thread_count += 1
             threads.append(threading.Thread(target=resp_loop, args=(
-                host_dict['host'], int(host_dict['frequency']), thread_count, _obj['submit_url']
+                host_dict, int(host_dict['frequency']), thread_count, _obj['submit_url']
             )))
     # start daemon threads
     for t in threads:
