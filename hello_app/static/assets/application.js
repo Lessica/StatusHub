@@ -3457,19 +3457,19 @@ $.support.pjax ? enable() : disable()
     }
 
     var defaultRelativeTime = {
-        future : 'in %s',
-        past   : '%s ago',
+        future : '%s 之后',
+        past   : '%s 之前',
         s  : 'a few seconds',
-        m  : 'a minute',
-        mm : '%d minutes',
-        h  : 'an hour',
-        hh : '%d hours',
-        d  : 'a day',
-        dd : '%d days',
-        M  : 'a month',
-        MM : '%d months',
-        y  : 'a year',
-        yy : '%d years'
+        m  : '1 分钟',
+        mm : '%d 分钟',
+        h  : '1 小时',
+        hh : '%d 小时',
+        d  : '1 天',
+        dd : '%d 天',
+        M  : '1 个月',
+        MM : '%d 个月',
+        y  : '1 年',
+        yy : '%d 年'
     };
 
     function relative__relativeTime (number, withoutSuffix, string, isFuture) {
@@ -3988,19 +3988,19 @@ $.support.pjax ? enable() : disable()
       strings: {
         prefixAgo: null,
         prefixFromNow: null,
-        suffixAgo: "ago",
-        suffixFromNow: "from now",
-        seconds: "less than a minute",
-        minute: "about a minute",
-        minutes: "%d minutes",
-        hour: "about an hour",
-        hours: "about %d hours",
-        day: "a day",
-        days: "%d days",
-        month: "about a month",
-        months: "%d months",
-        year: "about a year",
-        years: "%d years",
+        suffixAgo: "以前",
+        suffixFromNow: "从现在起",
+        seconds: "少于 1 分钟",
+        minute: "大约 1 分钟",
+        minutes: "%d 分钟",
+        hour: "大约 1 小时",
+        hours: "大约 %d 小时",
+        day: "1 天",
+        days: "%d 天",
+        month: "大约 1 个月",
+        months: "%d 个月",
+        year: "大约 1 年",
+        years: "%d 年",
         wordSeparator: " ",
         numbers: []
       }
@@ -4374,11 +4374,11 @@ function gestureStart() {
     automaticMessage = function(status) {
       switch (status) {
         case 'good':
-          return 'All systems reporting at 100%';
+          return '各项服务一切正常';
         case 'minor':
-          return 'The status is still yellow at the beginning of the day';
+          return '新的一天, 仍有服务存在异常.';
         case 'major':
-          return 'The status is still red at the beginning of the day';
+          return '新的一天, 仍有服务存在故障.';
       }
     };
     messagesOlderThan = function(date) {

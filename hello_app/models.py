@@ -150,7 +150,10 @@ class SiteMessageModel(CommonMessageModel):
             return None
         new_messages_list = {}
         for weekly_message in weekly_messages_list:
-            weekly_message['type'] = ''
+            if weekly_message['type'] == 3:
+                weekly_message['type'] = 'auto-message'
+            else:
+                weekly_message['type'] = ''
             weekly_message['status'] = SiteMessageModel.get_status_style_class_by_value(weekly_message['status'])
             if weekly_message['date']:
                 if weekly_message['date'] not in new_messages_list:
