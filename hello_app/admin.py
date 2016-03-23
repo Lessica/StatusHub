@@ -23,6 +23,13 @@ class SiteReportAdmin(admin.ModelAdmin):
 admin.site.register(SiteReportModel, SiteReportAdmin)
 
 
+class SiteHourlyReportAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'value', 'created_at')
+    search_fields = ['name']
+    list_filter = ['type']
+admin.site.register(SiteHourlyReportModel, SiteHourlyReportAdmin)
+
+
 class SiteMessageAdmin(admin.ModelAdmin):
     list_display = ('content', 'enabled', 'type', 'status', 'modified_at')
     search_fields = ['content']

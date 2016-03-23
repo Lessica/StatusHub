@@ -14,8 +14,8 @@ import requests
 import threading
 import subprocess
 
-g_debug = True
-g_count = 1
+g_debug = False
+g_count = 5
 g_origin = '127.0.0.1-ping-http'
 g_secret = 'pappi-blockade-suspend'
 g_session = requests.session()
@@ -100,7 +100,8 @@ def ping_loop(host, freq, flag, s_url):
                 'start': thread_time,
             }
             result = g_session.post(s_url, data={'request': json.dumps(request_data)})
-            print result.text
+            if g_debug:
+                print result.text
             if result.status_code != 200:
                 print '(Ping) Thread ' + str(flag) + ' | ' + 'Report Failed!'
             else:
