@@ -67,8 +67,8 @@ class CommonMessageModel(models.Model):
     content = models.TextField(default='')
     power = models.IntegerField(default=0)
     enabled = models.BooleanField(default=True)
-    created_at = models.DateTimeField()
-    modified_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
 
 class SiteMessageModel(CommonMessageModel):

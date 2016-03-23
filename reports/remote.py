@@ -38,7 +38,7 @@ def ping_loop(host, freq, flag, s_url):
     print '(Ping) Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     count = 4
-    lifeline = re.compile(r"(\d) received")
+    lifeline = re.compile(r"(\d) packets received")
     delay_line = re.compile(r"= (.+) ms")
     reports = []
     loop_times = 0
@@ -100,6 +100,7 @@ def ping_loop(host, freq, flag, s_url):
                 'start': thread_time,
             }
             result = g_session.post(s_url, data={'request': json.dumps(request_data)})
+            print result.text
             if result.status_code != 200:
                 print '(Ping) Thread ' + str(flag) + ' | ' + 'Report Failed!'
             else:
