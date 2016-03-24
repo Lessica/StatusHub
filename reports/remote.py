@@ -18,6 +18,10 @@ g_debug = False
 g_count = 5
 g_origin = '127.0.0.1-ping-http'
 g_secret = 'pappi-blockade-suspend'
+g_params = {
+    'origin': g_origin,
+    'secret': g_secret
+}
 g_session = requests.session()
 g_url_json = 'https://status.touchsprite.com/api.json'
 g_ua = 'StatusHub/1.0'
@@ -38,7 +42,7 @@ def ping_loop(host, freq, flag, s_url):
     print '(Ping) Thread ' + str(flag) + ' | ' + 'Seed = ' + str(seed) + ' | ' + 'Frequency = ' + str(freq)
     # init variables
     count = 4
-    lifeline = re.compile(r"(\d) packets received")
+    lifeline = re.compile(r"(\d) received")
     delay_line = re.compile(r"= (.+) ms")
     reports = []
     loop_times = 0
@@ -99,7 +103,7 @@ def ping_loop(host, freq, flag, s_url):
                 'data': reports,
                 'start': thread_time,
             }
-            result = g_session.post(s_url, data={'request': json.dumps(request_data)})
+            result = g_session.post(s_url, params=g_params, data={'request': json.dumps(request_data)})
             if g_debug:
                 print result.text
             if result.status_code != 200:
@@ -180,7 +184,7 @@ def http_loop(host_dict, freq, flag, s_url):
                 'data': reports,
                 'start': thread_time,
             }
-            result = g_session.post(s_url, data={'request': json.dumps(request_data)})
+            result = g_session.post(s_url, params=g_params, data={'request': json.dumps(request_data)})
             if result.status_code != 200:
                 print '(Http) Thread ' + str(flag) + ' | ' + 'Report Failed!'
             else:
@@ -255,12 +259,12 @@ def main():
     print 'Author: i_82 <i.82@me.com>'
     time.sleep(5)
     # init API URLs
-    result = g_session.get(g_url_json)
+    result = g_session.get(g_url_json, params=g_params)
     if result.status_code != 200:
         result.raise_for_status()
     _obj = json.loads(result.text)
     # get origins config
-    result = g_session.get(_obj['origins_url'], headers=g_header, timeout=10)
+    result = g_session.get(_obj['origins_url'], params=g_params, headers=g_header, timeout=10)
     if result.status_code != 200:
         result.raise_for_status()
     # parse origins config
@@ -275,7 +279,7 @@ def main():
             if origin['type'] == 'resp':
                 g_resp['enabled'] = True
     # get types config
-    result = g_session.get(_obj['types_url'], headers=g_header, timeout=10)
+    result = g_session.get(_obj['types_url'], params=g_params, headers=g_header, timeout=10)
     if result.status_code != 200:
         result.raise_for_status()
     subtypes = json.loads(result.text)
@@ -288,7 +292,7 @@ def main():
         if g_resp['enabled'] == True and subtype['type'] == 'resp':
             g_resp['subtypes'] = subtype['subtypes']
     # get hosts config
-    result = g_session.get(_obj['hosts_url'], headers=g_header, timeout=10)
+    result = g_session.get(_obj['hosts_url'], params=g_params, headers=g_header, timeout=10)
     if result.status_code != 200:
         result.raise_for_status()
     hosts = json.loads(result.text)

@@ -5,7 +5,7 @@ import json
 import random
 import urlparse
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseForbidden
 from hello_app.models import *
 from django.views.decorators.cache import cache_page
 
@@ -116,8 +116,7 @@ def api_json(request):
     return response
 
 
-@cache_page(900)
-def api_status(request):
+def api_check(request):
     api_url = str(SiteConfigModel.get_config('api_url'))
     api_uri = urlparse.urlparse(api_url)
     request_uri = request.get_host()
@@ -131,24 +130,33 @@ def api_status(request):
             "status": "shutdown",
             "message": "All servers should shutdown."
         }), content_type="application/json")
+    if 'origin' not in request.GET or 'secret' not in request.GET:
+        return HttpResponseForbidden(json.dumps({
+            "status": 'error',
+            "message": 'Permission Denied.'
+        }), content_type="application/json")
+    origin_obj = PingOriginModel.objects.get(origin=request.GET['origin'], enabled=True)
+    if not origin_obj or origin_obj.secret != request.GET['secret']:
+        return HttpResponseForbidden(json.dumps({
+            "status": 'error',
+            "message": 'Permission Denied.'
+        }), content_type="application/json")
+    return None
+
+
+@cache_page(900)
+def api_status(request):
+    check = api_check(request)
+    if check:
+        return check
     return HttpResponse(u"Not ready")
 
 
 @cache_page(900)
 def api_last_message(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponseServerError(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     latest_message = SiteMessageModel.get_latest_message_model()
     obj = {
         'status': latest_message.get_status_style_class(),
@@ -162,19 +170,9 @@ def api_last_message(request):
 
 @cache_page(900)
 def api_messages(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponseServerError(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     obj = SiteMessageModel.get_recent_messages_list()
     response = HttpResponse(json.dumps(obj), content_type="application/json")
     response['Access-Control-Allow-Origin'] = SiteConfigModel.get_config('Access-Control-Allow-Origin')
@@ -183,19 +181,9 @@ def api_messages(request):
 
 @cache_page(900)
 def api_hosts(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponseServerError(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     obj = CommonHostModel.get_all_hosts_arr()
     response = HttpResponse(json.dumps(obj), content_type="application/json")
     response['Access-Control-Allow-Origin'] = SiteConfigModel.get_config('Access-Control-Allow-Origin')
@@ -204,19 +192,9 @@ def api_hosts(request):
 
 @cache_page(900)
 def api_origins(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponseServerError(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     obj = CommonOriginModel.get_all_origins_arr()
     response = HttpResponse(json.dumps(obj), content_type="application/json")
     response['Access-Control-Allow-Origin'] = SiteConfigModel.get_config('Access-Control-Allow-Origin')
@@ -225,19 +203,9 @@ def api_origins(request):
 
 @cache_page(900)
 def api_types(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponseServerError(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     obj = [
         {
             "type": "ping",
@@ -273,19 +241,9 @@ def api_types(request):
 
 
 def api_submit(request):
-    api_url = str(SiteConfigModel.get_config('api_url'))
-    api_uri = urlparse.urlparse(api_url)
-    request_uri = request.get_host()
-    if api_uri.netloc != request_uri:
-        return HttpResponseBadRequest(json.dumps({
-            'status': 'error',
-            'message': 'Invalid URI: ' + request_uri
-        }), content_type='application/json')
-    if int(SiteConfigModel.get_config('api_all_shutdown')) == 0:
-        return HttpResponse(json.dumps({
-            "status": "shutdown",
-            "message": "All servers should shutdown."
-        }), content_type="application/json")
+    check = api_check(request)
+    if check:
+        return check
     SiteReportModel.generate_new_daily_message()
     obj = {}
     if len(request.POST) != 0:

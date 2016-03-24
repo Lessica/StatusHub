@@ -23,10 +23,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '%zhfy^f#o$bsb*i2o65b6%v3a&^p25*9(wf=hefcg)%wl@j8s#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    'status.touchsprite.com'
+    'status.touchsprite.com',
+    'status.play4u.cn',
+    'status.touchsprite.net',
 ]
 
 
